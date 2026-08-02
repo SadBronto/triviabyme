@@ -173,7 +173,7 @@ ${extraScripts}
 function hostCta() {
   return `<div class="host-cta">
 <strong>Host a trivia night?</strong>
-<p style="margin:0.4rem 0 0;">Get listed here and show off your Trivia Writers' Co-Op credibility.</p>
+<p style="margin:0.4rem 0 0;">Add it free, no account needed. Want to edit it later? Log in with Discord on TWC and claim your listing.</p>
 <a href="${TWC_SITE_URL}/input.html">Add your event on TWC &rarr;</a>
 </div>`;
 }
