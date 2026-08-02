@@ -152,7 +152,7 @@ ${bodyHtml}
 <img src="${TWC_SITE_URL}/logo.png" alt="Trivia Writers' Co-Op logo">
 <div>
 <h3>About the Trivia Writers' Co-Op</h3>
-<p style="margin:0;">TriviaByMe exists to help you find real, active trivia nights - and every one of them is run by a member or venue in good standing with the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>, the organization dedicated to raising the bar for trivia quality worldwide. TWC Certified means a host has been vetted for reliability and quality, not just anyone with a microphone.</p>
+<p style="margin:0;">TriviaByMe exists to help you find real, active trivia nights. Look for the <span class="badge" style="vertical-align:baseline;">TWC Certified</span> badge - it means that host has been vetted for reliability and quality by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>, the organization dedicated to raising the bar for trivia quality worldwide, not just anyone with a microphone.</p>
 </div>
 </div>
 <p>Run trivia nights yourself? <a href="${TWC_SITE_URL}/input.html">Add your event on TWC</a> to get listed here too.</p>
@@ -292,7 +292,7 @@ function renderTopIndex(countries) {
 
   const body = `
 <h1>Find a Trivia Night Near You</h1>
-<p class="lede">Real, active trivia nights on a real map, brought to you by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>. TWC Certified hosts - verified members held to real quality standards - are highlighted everywhere you see them.</p>
+<p class="lede">Real, active trivia nights near you, brought to you by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>. TWC Certified hosts - verified members held to real quality standards - are highlighted everywhere you see them.</p>
 ${mapSection()}
 <h2 style="border-bottom:2px solid #c5a572;padding-bottom:0.35rem;">Or browse by country</h2>
 ${groups}
