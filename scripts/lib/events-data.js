@@ -78,6 +78,8 @@ async function fetchInPersonEvents() {
       city: (row[13] || '').trim(),
       state: (row[14] || '').trim(),
       country: (row[16] || 'USA').trim(),
+      lat: row[17] ? Number(row[17]) : null,
+      lng: row[18] ? Number(row[18]) : null,
       certified: (row[19] || '').toLowerCase() === 'yes',
     }))
     // The sheet mixes event types (trivia, karaoke, bingo, etc.) - the main

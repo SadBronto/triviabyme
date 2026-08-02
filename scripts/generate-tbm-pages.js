@@ -6,10 +6,10 @@
 // build picks up whatever's in the sheet at that point.
 //
 // TBM's entire purpose is driving awareness of TWC (see the project's
-// README), so every page here: sorts TWC Certified events first, links each
-// host straight to their real TWC business-directory profile when one
-// exists, and carries a persistent "part of the Trivia Writers' Co-Op
-// network" mark - not a footer afterthought, an actual brand element.
+// README), so this isn't subtle: TWC's own navy/gold brand colors, TWC's
+// logo in the header, a real "what is TWC Certified" section up front, TWC
+// Certified events sorted first everywhere, host directory links, and a
+// substantial "About the Co-Op" footer - not a thin banner afterthought.
 //
 // Same fail-safe policy as TWC's own generator: if the Sheets fetch fails,
 // log a warning and exit 0 without touching any files, so a bad build never
@@ -36,7 +36,7 @@ function writeFileEnsured(filePath, content) {
 // page in it is generated - but that means hand-authored assets (currently
 // just the favicon) need a permanent home outside public/ that survives the
 // wipe, copied back in as the last build step. Add any future static asset
-// (a real logo, etc.) to static/ and it'll show up the same way.
+// to static/ and it'll show up the same way.
 function copyStaticAssets() {
   if (!fs.existsSync(STATIC_DIR)) return;
   for (const file of fs.readdirSync(STATIC_DIR)) {
@@ -71,8 +71,12 @@ function buildTbmTree(events) {
 }
 
 // ---- Shared page chrome ------------------------------------------------
+// Colors are TWC's own (navy #1e3a5f, gold #c5a572) on purpose, not "inspired
+// by" - matching exactly is what makes TBM read as the same family at a
+// glance, which does more for brand recognition than any amount of banner
+// text.
 
-function pageShell({ title, description, canonicalPath, bodyHtml }) {
+function pageShell({ title, description, canonicalPath, bodyHtml, extraHead = '', extraScripts = '' }) {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -86,66 +90,92 @@ function pageShell({ title, description, canonicalPath, bodyHtml }) {
 <meta property="og:url" content="${SITE_URL}${canonicalPath}">
 <link rel="canonical" href="${SITE_URL}${canonicalPath}">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+${extraHead}
 <style>
 *{box-sizing:border-box;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#faf7ff;color:#241b3a;margin:0;display:flex;flex-direction:column;min-height:100vh;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8f9fa;color:#1e3a5f;margin:0;display:flex;flex-direction:column;min-height:100vh;}
 a{color:inherit;}
-.container{max-width:820px;margin:0 auto;padding:0 1.5rem;flex:1;width:100%;}
-header.site-header{background:#3d1f75;color:white;padding:1rem 0;}
+.container{max-width:900px;margin:0 auto;padding:0 1.5rem;flex:1;width:100%;}
+header.site-header{background:#1e3a5f;color:white;padding:0.85rem 0;}
 header.site-header .container{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;}
 .logo{font-size:1.4rem;font-weight:800;text-decoration:none;color:white;letter-spacing:-0.02em;}
-.logo span{color:#ff7a59;}
+.logo span{color:#c5a572;}
 nav.site-nav a{color:white;text-decoration:none;font-size:0.9rem;font-weight:600;margin-left:1.25rem;opacity:0.9;}
 nav.site-nav a:hover{opacity:1;text-decoration:underline;}
-.twc-banner{background:#ff7a59;color:#241b3a;font-size:0.85rem;font-weight:600;text-align:center;padding:0.55rem 1rem;}
-.twc-banner a{color:#241b3a;text-decoration:underline;}
+.twc-strip{background:#c5a572;color:#1e3a5f;padding:0.7rem 0;}
+.twc-strip .container{display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;}
+.twc-strip img{height:28px;width:28px;border-radius:6px;background:white;padding:2px;flex-shrink:0;}
+.twc-strip span{font-size:0.88rem;font-weight:700;}
+.twc-strip a{color:#1e3a5f;text-decoration:underline;}
 main{padding:2rem 0 3rem;}
 h1{font-size:2rem;margin:0 0 0.5rem;}
 h2{font-size:1.25rem;}
-p.lede{color:#5a4d78;font-size:1.05rem;}
-.crumbs{font-size:0.85rem;color:#7a6d99;margin-bottom:1rem;}
-.crumbs a{text-decoration:none;color:#5a3fb8;font-weight:600;}
+p.lede{color:#555;font-size:1.05rem;}
+.crumbs{font-size:0.85rem;color:#888;margin-bottom:1rem;}
+.crumbs a{text-decoration:none;color:#1e3a5f;font-weight:600;}
 .crumbs a:hover{text-decoration:underline;}
-.card{background:white;border-radius:12px;padding:1.5rem;box-shadow:0 2px 10px rgba(61,31,117,0.08);}
+.card{background:white;border-radius:12px;padding:1.5rem;box-shadow:0 2px 10px rgba(30,58,95,0.08);}
 .country-group{margin-bottom:1.75rem;}
-.country-group h2{border-bottom:2px solid #ff7a59;padding-bottom:0.35rem;margin-bottom:0.75rem;}
-.count{color:#8a7dab;font-size:0.85rem;font-weight:400;}
+.country-group h2{border-bottom:2px solid #c5a572;padding-bottom:0.35rem;margin-bottom:0.75rem;}
+.count{color:#888;font-size:0.85rem;font-weight:400;}
 ul.link-grid{list-style:none;padding:0;margin:0;columns:2;gap:1rem;}
-ul.link-grid li{background:white;border-radius:10px;padding:0.8rem 1.1rem;margin-bottom:0.6rem;box-shadow:0 2px 8px rgba(61,31,117,0.07);break-inside:avoid;}
-ul.link-grid li a{font-weight:700;text-decoration:none;color:#3d1f75;}
+ul.link-grid li{background:white;border-radius:10px;padding:0.8rem 1.1rem;margin-bottom:0.6rem;box-shadow:0 2px 8px rgba(30,58,95,0.07);break-inside:avoid;}
+ul.link-grid li a{font-weight:700;text-decoration:none;color:#1e3a5f;}
 ul.link-grid li a:hover{text-decoration:underline;}
-.event-card{background:white;border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1rem;box-shadow:0 2px 10px rgba(61,31,117,0.08);}
-.event-card h3{margin:0 0 0.4rem;color:#3d1f75;}
-.event-meta,.event-host,.event-address{margin:0.2rem 0;color:#5a4d78;font-size:0.92rem;}
-.badge{display:inline-block;background:#ff7a59;color:#241b3a;font-size:0.7rem;font-weight:800;padding:0.15rem 0.55rem;border-radius:4px;vertical-align:middle;}
-.certified-note{font-size:0.85rem;color:#5a4d78;margin:0 0 1.25rem;padding:0.7rem 1rem;background:rgba(255,122,89,0.12);border-left:3px solid #ff7a59;border-radius:6px;}
-.certified-note a{color:#3d1f75;font-weight:700;}
-.directory-link{display:inline-block;margin-top:0.3rem;font-size:0.85rem;font-weight:700;color:#5a3fb8;text-decoration:none;}
+.event-card{background:white;border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1rem;box-shadow:0 2px 10px rgba(30,58,95,0.08);}
+.event-card h3{margin:0 0 0.4rem;color:#1e3a5f;}
+.event-meta,.event-host,.event-address{margin:0.2rem 0;color:#555;font-size:0.92rem;}
+.badge{display:inline-block;background:#c5a572;color:#1e3a5f;font-size:0.7rem;font-weight:800;padding:0.15rem 0.55rem;border-radius:4px;vertical-align:middle;}
+.certified-note{font-size:0.85rem;color:#555;margin:0 0 1.25rem;padding:0.7rem 1rem;background:rgba(197,165,114,0.15);border-left:3px solid #c5a572;border-radius:6px;}
+.certified-note a{color:#1e3a5f;font-weight:700;}
+.directory-link{display:inline-block;margin-top:0.3rem;font-size:0.85rem;font-weight:700;color:#1e3a5f;text-decoration:none;}
 .directory-link:hover{text-decoration:underline;}
-.host-cta{margin-top:2.5rem;padding:1.5rem;background:#3d1f75;color:white;border-radius:12px;text-align:center;}
-.host-cta a{display:inline-block;margin-top:0.75rem;background:#ff7a59;color:#241b3a;font-weight:800;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;}
-footer.site-footer{background:#241b3a;color:#cabfe6;padding:2rem 0;margin-top:auto;font-size:0.85rem;}
+.host-cta{margin-top:2.5rem;padding:1.5rem;background:#1e3a5f;color:white;border-radius:12px;text-align:center;}
+.host-cta a{display:inline-block;margin-top:0.75rem;background:#c5a572;color:#1e3a5f;font-weight:800;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;}
+footer.site-footer{background:#152c48;color:#c9d4e0;padding:2.5rem 0;margin-top:auto;font-size:0.9rem;}
+footer.site-footer .twc-about{display:flex;gap:1.25rem;align-items:flex-start;padding-bottom:1.5rem;margin-bottom:1.5rem;border-bottom:1px solid rgba(255,255,255,0.15);}
+footer.site-footer .twc-about img{height:56px;width:56px;border-radius:10px;background:white;padding:4px;flex-shrink:0;}
+footer.site-footer .twc-about h3{color:white;margin:0 0 0.4rem;font-size:1.05rem;}
 footer.site-footer a{color:white;font-weight:700;text-decoration:none;}
 footer.site-footer a:hover{text-decoration:underline;}
+footer.site-footer .footer-links{display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:1rem;font-size:0.85rem;}
 </style>
 </head>
 <body>
-<div class="twc-banner">TriviaByMe is part of the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a> network - the people behind trivia quality worldwide.</div>
 <header class="site-header">
 <div class="container">
 <a class="logo" href="/">Trivia<span>ByMe</span></a>
-<nav class="site-nav"><a href="/">Find Trivia</a><a href="${TWC_SITE_URL}/business-directory.html">Business Directory</a></nav>
+<nav class="site-nav"><a href="/">Find Trivia</a><a href="${TWC_SITE_URL}/business-directory.html">Business Directory</a><a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a></nav>
 </div>
 </header>
+<div class="twc-strip">
+<div class="container">
+<img src="${TWC_SITE_URL}/logo.png" alt="Trivia Writers' Co-Op logo">
+<span>TriviaByMe is brought to you by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a> - every TWC Certified listing you see here is a real, vetted member.</span>
+</div>
+</div>
 <main class="container">
 ${bodyHtml}
 </main>
 <footer class="site-footer">
 <div class="container">
-<p>TriviaByMe helps you find real, active trivia nights near you. Every listing here is run by a member or venue in good standing with the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a> - the organization dedicated to raising the bar for trivia quality worldwide.</p>
+<div class="twc-about">
+<img src="${TWC_SITE_URL}/logo.png" alt="Trivia Writers' Co-Op logo">
+<div>
+<h3>About the Trivia Writers' Co-Op</h3>
+<p style="margin:0;">TriviaByMe exists to help you find real, active trivia nights - and every one of them is run by a member or venue in good standing with the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>, the organization dedicated to raising the bar for trivia quality worldwide. TWC Certified means a host has been vetted for reliability and quality, not just anyone with a microphone.</p>
+</div>
+</div>
 <p>Run trivia nights yourself? <a href="${TWC_SITE_URL}/input.html">Add your event on TWC</a> to get listed here too.</p>
+<div class="footer-links">
+<a href="${TWC_SITE_URL}/about-us.html">About TWC</a>
+<a href="${TWC_SITE_URL}/business-directory.html">Business Directory</a>
+<a href="${TWC_SITE_URL}/endorsements.html">Endorsements</a>
+<a href="${TWC_SITE_URL}/input.html">Add Your Event</a>
+</div>
 </div>
 </footer>
+${extraScripts}
 </body>
 </html>
 `;
@@ -157,6 +187,98 @@ function hostCta() {
 <p style="margin:0.4rem 0 0;">Get listed here and show off your Trivia Writers' Co-Op credibility.</p>
 <a href="${TWC_SITE_URL}/input.html">Add your event on TWC &rarr;</a>
 </div>`;
+}
+
+// ---- Map (homepage only) -------------------------------------------------
+// Same technique TWC's own map already uses in production: Leaflet +
+// Leaflet.markercluster + OpenStreetMap tiles, no API key needed for any of
+// it. Pin data comes from a small static events.json written alongside the
+// pages (see main()) - only events with real lat/lng end up in it, so a
+// missing/blank coordinate just quietly skips that one event on the map
+// instead of breaking anything (it's still fully browsable via the country/
+// region/city pages below).
+const MAP_HEAD = `
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" integrity="sha384-wgw+aLYNQ7dlhK47ZPK7FRACiq7ROZwgFNg0m04avm4CaXS+Z9Y7nMu8yNjBKYC+" crossorigin="anonymous" />
+<style>
+#map{height:480px;border-radius:12px;box-shadow:0 2px 10px rgba(30,58,95,0.1);margin-bottom:0.75rem;}
+.map-legend{display:flex;gap:1.25rem;align-items:center;font-size:0.85rem;color:#555;margin-bottom:2rem;flex-wrap:wrap;}
+.map-legend .swatch{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:0.35rem;vertical-align:middle;}
+.map-legend .swatch.certified{background:#c5a572;}
+.map-legend .swatch.regular{background:#1e3a5f;}
+#locateBtn{background:#1e3a5f;color:white;border:none;border-radius:8px;padding:0.5rem 1rem;font-weight:700;font-size:0.85rem;cursor:pointer;margin-bottom:0.75rem;}
+#locateBtn:hover{background:#16304d;}
+</style>`;
+
+const MAP_SCRIPT = `
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" integrity="sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr" crossorigin="anonymous"></script>
+<script>
+(function () {
+  function escapeHtml(v) {
+    const d = document.createElement('div');
+    d.textContent = v == null ? '' : String(v);
+    return d.innerHTML;
+  }
+  fetch('/events.json').then((r) => r.json()).then((events) => {
+    const map = L.map('map', {
+      worldCopyJump: true,
+      maxBounds: [[-90, -180], [90, 180]],
+      maxBoundsViscosity: 1.0,
+      minZoom: 2,
+    }).setView([39.8283, -98.5795], 4);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      noWrap: true,
+      bounds: [[-85, -180], [85, 180]],
+      minZoom: 2,
+      maxZoom: 18,
+    }).addTo(map);
+
+    const cluster = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 70 });
+    events.forEach((e) => {
+      const marker = L.marker([e.lat, e.lng], {
+        icon: L.divIcon({
+          className: '',
+          html: '<div style="width:16px;height:16px;border-radius:50%;background:' + (e.certified ? '#c5a572' : '#1e3a5f') + ';border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.4);"></div>',
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
+        }),
+      });
+      const certifiedBadge = e.certified ? '<img src="${TWC_SITE_URL}/TWCSeal.png" style="width:26px;height:26px;float:right;">' : '';
+      const directoryLink = e.directoryUrl ? '<a href="' + e.directoryUrl + '" target="_blank" rel="noopener" style="display:block;margin-top:0.4rem;font-weight:700;color:#1e3a5f;font-size:0.85rem;">See full profile on TWC &rarr;</a>' : '';
+      marker.bindPopup(
+        '<div style="min-width:200px;">' + certifiedBadge +
+        '<div style="font-weight:700;color:#1e3a5f;">' + escapeHtml(e.venueName) + '</div>' +
+        '<div style="color:#555;font-size:0.85rem;margin:0.2rem 0;">Hosted by ' + escapeHtml(e.hostName) + '</div>' +
+        '<div style="font-size:0.85rem;color:#555;">' + escapeHtml(e.day) + ' ' + escapeHtml(e.time) + ' ' + escapeHtml(e.timezone) + '</div>' +
+        directoryLink +
+        '<a href="' + e.cityUrl + '" style="display:block;margin-top:0.4rem;font-weight:700;color:#1e3a5f;font-size:0.85rem;">More trivia in ' + escapeHtml(e.city) + ' &rarr;</a>' +
+        '</div>'
+      );
+      cluster.addLayer(marker);
+    });
+    map.addLayer(cluster);
+
+    document.getElementById('locateBtn').addEventListener('click', () => {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition((pos) => {
+        map.setView([pos.coords.latitude, pos.coords.longitude], 11);
+      });
+    });
+  }).catch(() => {
+    document.getElementById('map').innerHTML = '<p style="padding:1rem;color:#888;">Map temporarily unavailable.</p>';
+  });
+})();
+</script>`;
+
+function mapSection() {
+  return `
+<button id="locateBtn" type="button">&#128205; Use My Location</button>
+<div id="map"></div>
+<div class="map-legend"><span><span class="swatch certified"></span>TWC Certified</span><span><span class="swatch regular"></span>Other listed trivia night</span></div>`;
 }
 
 // ---- Page renderers -----------------------------------------------------
@@ -181,15 +303,19 @@ function renderTopIndex(countries) {
 
   const body = `
 <h1>Find a Trivia Night Near You</h1>
-<p class="lede">Browse real, active trivia nights by country, then state or province. Certified hosts - verified members of the Trivia Writers' Co-Op - are highlighted everywhere you see them.</p>
+<p class="lede">Real, active trivia nights on a real map. Certified hosts - verified members of the Trivia Writers' Co-Op - are highlighted everywhere you see them.</p>
+${mapSection()}
+<h2 style="border-bottom:2px solid #c5a572;padding-bottom:0.35rem;">Or browse by country</h2>
 ${groups}
 ${hostCta()}
 `;
   return pageShell({
     title: 'Find Trivia Nights Near You - TriviaByMe',
-    description: 'Browse real, active trivia nights by country, state, or province.',
+    description: 'Browse real, active trivia nights on an interactive map, or by country, state, or province.',
     canonicalPath: '/',
     bodyHtml: body,
+    extraHead: MAP_HEAD,
+    extraScripts: MAP_SCRIPT,
   });
 }
 
@@ -307,6 +433,33 @@ ${urls.map((u) => `  <url>\n    <loc>${SITE_URL}${u.loc}</loc>\n    <priority>${
   fs.writeFileSync(path.join(PUBLIC_DIR, 'sitemap.xml'), xml);
 }
 
+// One row per event that has real coordinates - the homepage map's only data
+// source. Events without lat/lng are simply absent from the map but still
+// fully reachable via the country/region/city pages.
+function writeEventsJson(cities) {
+  const rows = [];
+  cities.forEach((city) => {
+    city.events.forEach((e) => {
+      if (typeof e.lat !== 'number' || typeof e.lng !== 'number' || Number.isNaN(e.lat) || Number.isNaN(e.lng)) return;
+      rows.push({
+        lat: e.lat,
+        lng: e.lng,
+        venueName: e.venueName || e.companyName || 'Trivia Night',
+        hostName: e.companyName || e.hostName,
+        day: e.day,
+        time: e.time,
+        timezone: e.timezone,
+        certified: e.certified,
+        directoryUrl: e.directoryUrl || null,
+        city: titleCase(city.city),
+        cityUrl: `/${city.tbmSlug}.html`,
+      });
+    });
+  });
+  fs.writeFileSync(path.join(PUBLIC_DIR, 'events.json'), JSON.stringify(rows));
+  return rows.length;
+}
+
 async function main() {
   console.log('[generate-tbm-pages] Fetching events and business profiles...');
   const [rawEvents, profilesByUserId] = await Promise.all([
@@ -341,6 +494,9 @@ async function main() {
     writeFileEnsured(path.join(PUBLIC_DIR, `${city.tbmSlug}.html`), renderCityPage(city, formatLocationLabel(city.country), city.state ? formatLocationLabel(city.state) : formatLocationLabel(city.country)));
   });
 
+  const mappedCount = writeEventsJson(tree.cities);
+  console.log(`[generate-tbm-pages] ${mappedCount} events have coordinates and will appear on the map.`);
+
   regenerateSitemap(tree);
   copyStaticAssets();
   console.log('[generate-tbm-pages] Done.');
@@ -353,4 +509,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { buildTbmTree, renderTopIndex, renderCountryPage, renderRegionPage, renderCityPage };
+module.exports = { buildTbmTree, renderTopIndex, renderCountryPage, renderRegionPage, renderCityPage, writeEventsJson };
