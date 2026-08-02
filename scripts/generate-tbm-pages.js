@@ -102,11 +102,6 @@ header.site-header .container{display:flex;align-items:center;justify-content:sp
 .logo span{color:#c5a572;}
 nav.site-nav a{color:white;text-decoration:none;font-size:0.9rem;font-weight:600;margin-left:1.25rem;opacity:0.9;}
 nav.site-nav a:hover{opacity:1;text-decoration:underline;}
-.twc-strip{background:#c5a572;color:#1e3a5f;padding:0.7rem 0;}
-.twc-strip .container{display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;}
-.twc-strip img{height:28px;width:28px;border-radius:6px;background:white;padding:2px;flex-shrink:0;}
-.twc-strip span{font-size:0.88rem;font-weight:700;}
-.twc-strip a{color:#1e3a5f;text-decoration:underline;}
 main{padding:2rem 0 3rem;}
 h1{font-size:2rem;margin:0 0 0.5rem;}
 h2{font-size:1.25rem;}
@@ -148,12 +143,6 @@ footer.site-footer .footer-links{display:flex;gap:1.5rem;flex-wrap:wrap;margin-t
 <nav class="site-nav"><a href="/">Find Trivia</a><a href="${TWC_SITE_URL}/business-directory.html">Business Directory</a><a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a></nav>
 </div>
 </header>
-<div class="twc-strip">
-<div class="container">
-<img src="${TWC_SITE_URL}/logo.png" alt="Trivia Writers' Co-Op logo">
-<span>TriviaByMe is brought to you by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a> - every TWC Certified listing you see here is a real, vetted member.</span>
-</div>
-</div>
 <main class="container">
 ${bodyHtml}
 </main>
@@ -303,7 +292,7 @@ function renderTopIndex(countries) {
 
   const body = `
 <h1>Find a Trivia Night Near You</h1>
-<p class="lede">Real, active trivia nights on a real map. Certified hosts - verified members of the Trivia Writers' Co-Op - are highlighted everywhere you see them.</p>
+<p class="lede">Real, active trivia nights on a real map, brought to you by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>. TWC Certified hosts - verified members held to real quality standards - are highlighted everywhere you see them.</p>
 ${mapSection()}
 <h2 style="border-bottom:2px solid #c5a572;padding-bottom:0.35rem;">Or browse by country</h2>
 ${groups}
