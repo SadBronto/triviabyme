@@ -1,0 +1,7 @@
+node_modules/
+public/
+.env
+.netlify/
+.claude/
+.DS_Store
+Thumbs.db

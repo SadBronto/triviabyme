@@ -1,0 +1,8 @@
+[build]
+  command = "npm install && node scripts/generate-tbm-pages.js"
+  publish = "public"
+
+# No [functions] block on purpose - TBM has no live backend of any kind.
+# No login, no submission form, no write access to anything. Every page is
+# static HTML regenerated at build time from the same Google Sheet TWC
+# already owns. Adding/editing an event only ever happens on TWC.

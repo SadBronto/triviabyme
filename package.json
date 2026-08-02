@@ -1,0 +1,9 @@
+{
+  "name": "triviabyme",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TriviaByMe - static trivia-night search site, sister to triviawriterscoop.com",
+  "dependencies": {
+    "googleapis": "^167.0.0"
+  }
+}
