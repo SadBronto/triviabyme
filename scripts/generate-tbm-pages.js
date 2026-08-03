@@ -162,7 +162,7 @@ ${bodyHtml}
 <img src="${TWC_SITE_URL}/logo.png" alt="Trivia Writers' Co-Op logo">
 <div>
 <h3>About the Trivia Writers' Co-Op</h3>
-<p style="margin:0;">TriviaByMe exists to help you find real, active trivia nights. Look for the <span class="badge" style="vertical-align:baseline;">TWC Certified</span> badge - it means that host has been vetted for reliability and quality by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>, the organization dedicated to raising the bar for trivia quality worldwide, not just anyone with a microphone.</p>
+<p style="margin:0;">TriviaByMe exists to help you find real, active trivia nights. Look for the <span class="badge" style="vertical-align:baseline;">TWC Certified</span> badge - it means that host has been vetted for reliability and quality by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>, the organization dedicated to raising the bar for trivia quality worldwide.</p>
 </div>
 </div>
 <p>Run trivia nights yourself? <a href="${TWC_SITE_URL}/input.html">Add your event on TWC</a> to get listed here too.</p>
