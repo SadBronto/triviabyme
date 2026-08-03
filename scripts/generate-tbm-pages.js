@@ -127,10 +127,10 @@ ul.link-grid li a:hover{text-decoration:underline;}
 .directory-link:hover{text-decoration:underline;}
 .host-cta{margin-top:2.5rem;padding:1.5rem;background:#1e3a5f;color:white;border-radius:12px;text-align:center;}
 .host-cta a{display:inline-block;margin-top:0.75rem;background:#c5a572;color:#1e3a5f;font-weight:800;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;}
-.action-row{display:flex;gap:1rem;margin-bottom:1.25rem;align-items:stretch;flex-wrap:wrap;}
-.action-row #locateBtn{flex:1;min-width:180px;background:#1e3a5f;color:white;border:none;border-radius:12px;padding:1.1rem;font-weight:700;font-size:0.95rem;cursor:pointer;}
+.action-row{display:flex;gap:1rem;margin-bottom:1.25rem;align-items:flex-start;flex-wrap:wrap;}
+.action-row #locateBtn{flex:1;min-width:160px;align-self:flex-start;background:#1e3a5f;color:white;border:none;border-radius:8px;padding:0.6rem 1rem;font-weight:700;font-size:0.85rem;cursor:pointer;}
 .action-row #locateBtn:hover{background:#16304d;}
-.hero-cta{flex:2;min-width:240px;background:#1e3a5f;color:white;padding:1.1rem 1.25rem;border-radius:12px;text-align:center;}
+.hero-cta{flex:2;min-width:240px;background:#1e3a5f;color:white;padding:0.9rem 1.25rem;border-radius:12px;text-align:center;}
 .hero-cta p{margin:0.3rem 0 0;font-size:0.85rem;color:#c9d4e0;}
 .hero-cta a{display:inline-block;margin-top:0.65rem;background:#c5a572;color:#1e3a5f;font-weight:800;text-decoration:none;padding:0.55rem 1.1rem;border-radius:8px;font-size:0.85rem;}
 footer.site-footer{background:#152c48;color:#c9d4e0;padding:2.5rem 0;margin-top:auto;font-size:0.9rem;}
@@ -185,12 +185,12 @@ function hostCta() {
 }
 
 // Compact version of the same CTA, for the homepage hero row (see
-// renderTopIndex) - same message and link, just sized to sit beside the
-// heading instead of spanning the full width at the bottom of the page.
+// renderTopIndex) - same full message and link as hostCta(), just in a
+// narrower box that sits in the action row instead of spanning full width.
 function hostCtaCompact() {
   return `<div class="hero-cta">
 <strong>Host a trivia night?</strong>
-<p>Free, no account needed.</p>
+<p>Add it free, no account needed. Want to edit it later? Log in with Discord on TWC and claim your listing.</p>
 <a href="${TWC_SITE_URL}/input.html">Add your event on TWC &rarr;</a>
 </div>`;
 }
