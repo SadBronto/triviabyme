@@ -127,9 +127,12 @@ ul.link-grid li a:hover{text-decoration:underline;}
 .directory-link:hover{text-decoration:underline;}
 .host-cta{margin-top:2.5rem;padding:1.5rem;background:#1e3a5f;color:white;border-radius:12px;text-align:center;}
 .host-cta a{display:inline-block;margin-top:0.75rem;background:#c5a572;color:#1e3a5f;font-weight:800;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;}
-.action-row{display:flex;gap:1rem;margin-bottom:1.25rem;align-items:flex-start;flex-wrap:wrap;}
-.action-row #locateBtn{flex:1;min-width:160px;align-self:flex-start;background:#1e3a5f;color:white;border:none;border-radius:8px;padding:0.6rem 1rem;font-weight:700;font-size:0.85rem;cursor:pointer;}
-.action-row #locateBtn:hover{background:#16304d;}
+.action-row{display:flex;gap:1rem;margin-bottom:1.25rem;align-items:stretch;flex-wrap:wrap;}
+.action-col{flex:1;min-width:160px;display:flex;flex-direction:column;justify-content:space-between;gap:0.6rem;}
+.report-link{display:block;font-size:0.85rem;color:#555;text-decoration:none;border:1px solid #ddd;border-radius:8px;padding:0.6rem 1rem;background:white;}
+.report-link:hover{border-color:#1e3a5f;color:#1e3a5f;}
+.action-col #locateBtn{background:#1e3a5f;color:white;border:none;border-radius:8px;padding:0.6rem 1rem;font-weight:700;font-size:0.85rem;cursor:pointer;}
+.action-col #locateBtn:hover{background:#16304d;}
 .hero-cta{flex:2;min-width:240px;background:#1e3a5f;color:white;padding:0.9rem 1.25rem;border-radius:12px;text-align:center;}
 .hero-cta p{margin:0.3rem 0 0;font-size:0.85rem;color:#c9d4e0;}
 .hero-cta a{display:inline-block;margin-top:0.65rem;background:#c5a572;color:#1e3a5f;font-weight:800;text-decoration:none;padding:0.55rem 1.1rem;border-radius:8px;font-size:0.85rem;}
@@ -308,7 +311,10 @@ function renderTopIndex(countries) {
 <h1>Find a Trivia Night Near You</h1>
 <p class="lede">Real, active trivia nights near you, brought to you by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>. Look for the TWC Certified badge to find vetted, quality hosts.</p>
 <div class="action-row">
+<div class="action-col">
+<a class="report-link" href="${TWC_SITE_URL}/contact.html">&#9888; See something wrong with a listing? Let us know</a>
 <button id="locateBtn" type="button">&#128205; Use My Location</button>
+</div>
 ${hostCtaCompact()}
 </div>
 ${mapSection()}
