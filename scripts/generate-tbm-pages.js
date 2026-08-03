@@ -129,8 +129,9 @@ ul.link-grid li a:hover{text-decoration:underline;}
 .host-cta a{display:inline-block;margin-top:0.75rem;background:#c5a572;color:#1e3a5f;font-weight:800;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;}
 .action-row{display:flex;gap:1rem;margin-bottom:1.25rem;align-items:stretch;flex-wrap:wrap;}
 .action-col{flex:1;min-width:160px;display:flex;flex-direction:column;justify-content:space-between;gap:0.6rem;}
-.report-link{display:block;font-size:0.85rem;font-weight:700;color:white;text-decoration:none;border-radius:8px;padding:0.6rem 1rem;background:#1e3a5f;}
-.report-link:hover{background:#16304d;}
+.report-box{background:#1e3a5f;color:white;padding:0.75rem 1rem;border-radius:12px;text-align:center;}
+.report-box p{margin:0;font-size:0.85rem;}
+.report-box a{display:inline-block;margin-top:0.55rem;background:#c5a572;color:#1e3a5f;font-weight:800;text-decoration:none;padding:0.5rem 1.1rem;border-radius:8px;font-size:0.85rem;}
 .action-col #locateBtn{background:#1e3a5f;color:white;border:none;border-radius:8px;padding:0.6rem 1rem;font-weight:700;font-size:0.85rem;cursor:pointer;}
 .action-col #locateBtn:hover{background:#16304d;}
 .hero-cta{flex:2;min-width:240px;background:#1e3a5f;color:white;padding:0.9rem 1.25rem;border-radius:12px;text-align:center;}
@@ -312,7 +313,10 @@ function renderTopIndex(countries) {
 <p class="lede">Real, active trivia nights near you, brought to you by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>. Look for the TWC Certified badge to find vetted, quality hosts.</p>
 <div class="action-row">
 <div class="action-col">
-<a class="report-link" href="${TWC_SITE_URL}/contact.html">&#9888; See something wrong with a listing? Let us know</a>
+<div class="report-box">
+<p>See something wrong with a listing?</p>
+<a href="${TWC_SITE_URL}/contact.html">Let us know &rarr;</a>
+</div>
 <button id="locateBtn" type="button">&#128205; Use My Location</button>
 </div>
 ${hostCtaCompact()}
