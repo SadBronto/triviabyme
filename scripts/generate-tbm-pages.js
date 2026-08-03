@@ -135,6 +135,7 @@ ul.link-grid li a:hover{text-decoration:underline;}
 .action-col #locateBtn{background:#1e3a5f;color:white;border:none;border-radius:8px;padding:0.6rem 1rem;font-weight:700;font-size:0.85rem;cursor:pointer;}
 .action-col #locateBtn:hover{background:#16304d;}
 .hero-cta{flex:2;min-width:240px;background:#1e3a5f;color:white;padding:0.9rem 1.25rem;border-radius:12px;text-align:center;}
+@media (max-width:640px){.action-row{flex-direction:column;}.action-col{display:contents;}.hero-cta{order:1;}.report-box{order:2;}.action-col #locateBtn{order:3;}}
 .hero-cta p{margin:0.3rem 0 0;font-size:0.85rem;color:#c9d4e0;}
 .hero-cta a{display:inline-block;margin-top:0.65rem;background:#c5a572;color:#1e3a5f;font-weight:800;text-decoration:none;padding:0.55rem 1.1rem;border-radius:8px;font-size:0.85rem;}
 footer.site-footer{background:#152c48;color:#c9d4e0;padding:2.5rem 0;margin-top:auto;font-size:0.9rem;}
@@ -162,7 +163,7 @@ ${bodyHtml}
 <img src="${TWC_SITE_URL}/logo.png" alt="Trivia Writers' Co-Op logo">
 <div>
 <h3>About the Trivia Writers' Co-Op</h3>
-<p style="margin:0;">TriviaByMe exists to help you find real, active trivia nights. Look for the <span class="badge" style="vertical-align:baseline;">TWC Certified</span> badge - it means that host has been vetted for reliability and quality by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>, the organization dedicated to raising the bar for trivia quality worldwide.</p>
+<p style="margin:0;">TriviaByMe exists to help you find local trivia nights. Look for the <span class="badge" style="vertical-align:baseline;">TWC Certified</span> badge - it means that host has been vetted for reliability and quality by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>, the organization dedicated to raising the bar for trivia quality worldwide.</p>
 </div>
 </div>
 <p>Run trivia nights yourself? <a href="${TWC_SITE_URL}/input.html">Add your event on TWC</a> to get listed here too.</p>
@@ -170,7 +171,6 @@ ${bodyHtml}
 <a href="${TWC_SITE_URL}/about-us.html">About TWC</a>
 <a href="${TWC_SITE_URL}/business-directory.html">Business Directory</a>
 <a href="${TWC_SITE_URL}/endorsements.html">Endorsements</a>
-<a href="${TWC_SITE_URL}/input.html">Add Your Event</a>
 </div>
 </div>
 </footer>
@@ -310,7 +310,7 @@ function renderTopIndex(countries) {
 
   const body = `
 <h1>Find a Trivia Night Near You</h1>
-<p class="lede">Real, active trivia nights near you, brought to you by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>. Look for the TWC Certified badge to find vetted, quality hosts.</p>
+<p class="lede">Find trivia nights near you, courtesy of the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>.</p>
 <div class="action-row">
 <div class="action-col">
 <div class="report-box">
