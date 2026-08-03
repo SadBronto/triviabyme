@@ -129,8 +129,8 @@ ul.link-grid li a:hover{text-decoration:underline;}
 .host-cta a{display:inline-block;margin-top:0.75rem;background:#c5a572;color:#1e3a5f;font-weight:800;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;}
 .action-row{display:flex;gap:1rem;margin-bottom:1.25rem;align-items:stretch;flex-wrap:wrap;}
 .action-col{flex:1;min-width:160px;display:flex;flex-direction:column;justify-content:space-between;gap:0.6rem;}
-.report-link{display:block;font-size:0.85rem;color:#555;text-decoration:none;border:1px solid #ddd;border-radius:8px;padding:0.6rem 1rem;background:white;}
-.report-link:hover{border-color:#1e3a5f;color:#1e3a5f;}
+.report-link{display:block;font-size:0.85rem;font-weight:700;color:white;text-decoration:none;border-radius:8px;padding:0.6rem 1rem;background:#1e3a5f;}
+.report-link:hover{background:#16304d;}
 .action-col #locateBtn{background:#1e3a5f;color:white;border:none;border-radius:8px;padding:0.6rem 1rem;font-weight:700;font-size:0.85rem;cursor:pointer;}
 .action-col #locateBtn:hover{background:#16304d;}
 .hero-cta{flex:2;min-width:240px;background:#1e3a5f;color:white;padding:0.9rem 1.25rem;border-radius:12px;text-align:center;}
@@ -182,18 +182,18 @@ ${extraScripts}
 function hostCta() {
   return `<div class="host-cta">
 <strong>Host a trivia night?</strong>
-<p style="margin:0.4rem 0 0;">Add it free, no account needed. Want to edit it later? Log in with Discord on TWC and claim your listing.</p>
+<p style="margin:0.4rem 0 0;">Add it free - no account needed to list it.</p>
 <a href="${TWC_SITE_URL}/input.html">Add your event on TWC &rarr;</a>
 </div>`;
 }
 
 // Compact version of the same CTA, for the homepage hero row (see
-// renderTopIndex) - same full message and link as hostCta(), just in a
-// narrower box that sits in the action row instead of spanning full width.
+// renderTopIndex) - same message and link as hostCta(), just in a narrower
+// box that sits in the action row instead of spanning full width.
 function hostCtaCompact() {
   return `<div class="hero-cta">
 <strong>Host a trivia night?</strong>
-<p>Add it free, no account needed. Want to edit it later? Log in with Discord on TWC and claim your listing.</p>
+<p>Add it free - no account needed to list it.</p>
 <a href="${TWC_SITE_URL}/input.html">Add your event on TWC &rarr;</a>
 </div>`;
 }
