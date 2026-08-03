@@ -183,7 +183,7 @@ ${extraScripts}
 function hostCta() {
   return `<div class="host-cta">
 <strong>Host a trivia night?</strong>
-<p style="margin:0.4rem 0 0;">Add it free - no account needed to list it.</p>
+<p style="margin:0.4rem 0 0;">Add it free - Co-Op member or not, no account needed. You'll get a link to manage it later.</p>
 <a href="${TWC_SITE_URL}/input.html">Add your event on TWC &rarr;</a>
 </div>`;
 }
@@ -194,7 +194,7 @@ function hostCta() {
 function hostCtaCompact() {
   return `<div class="hero-cta">
 <strong>Host a trivia night?</strong>
-<p>Add it free - no account needed to list it.</p>
+<p>Add it free - Co-Op member or not, no account needed. You'll get a link to manage it later.</p>
 <a href="${TWC_SITE_URL}/input.html">Add your event on TWC &rarr;</a>
 </div>`;
 }
