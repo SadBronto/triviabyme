@@ -183,7 +183,7 @@ ${extraScripts}
 function hostCta() {
   return `<div class="host-cta">
 <strong>Host a trivia night?</strong>
-<p style="margin:0.4rem 0 0;">Add it free - Co-Op member or not, no account needed. You'll get a link to manage it later.</p>
+<p style="margin:0.4rem 0 0;">Add it free - Co-Op member or not, no account needed.</p>
 <a href="${TWC_SITE_URL}/input.html">Add your event on TWC &rarr;</a>
 </div>`;
 }
@@ -194,7 +194,7 @@ function hostCta() {
 function hostCtaCompact() {
   return `<div class="hero-cta">
 <strong>Host a trivia night?</strong>
-<p>Add it free - Co-Op member or not, no account needed. You'll get a link to manage it later.</p>
+<p>Add it free - Co-Op member or not, no account needed.</p>
 <a href="${TWC_SITE_URL}/input.html">Add your event on TWC &rarr;</a>
 </div>`;
 }
@@ -322,7 +322,7 @@ function renderTopIndex(countries) {
 ${hostCtaCompact()}
 </div>
 ${mapSection()}
-<h2 style="border-bottom:2px solid #c5a572;padding-bottom:0.35rem;">Or browse by country</h2>
+<h2 style="border-bottom:2px solid #c5a572;padding-bottom:0.35rem;">Or browse by Locations</h2>
 ${groups}
 `;
   return pageShell({
