@@ -1,4 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <circle cx="32" cy="32" r="32" fill="#3d1f75"/>
-  <text x="32" y="43" font-family="Arial, sans-serif" font-size="26" font-weight="800" fill="#ff7a59" text-anchor="middle">TBM</text>
+  <circle cx="32" cy="32" r="32" fill="#1e3a5f"/>
+  <text x="32" y="43" font-family="Arial, sans-serif" font-size="26" font-weight="800" fill="#c5a572" text-anchor="middle">TBM</text>
 </svg>

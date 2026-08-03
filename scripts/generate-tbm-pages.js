@@ -127,6 +127,12 @@ ul.link-grid li a:hover{text-decoration:underline;}
 .directory-link:hover{text-decoration:underline;}
 .host-cta{margin-top:2.5rem;padding:1.5rem;background:#1e3a5f;color:white;border-radius:12px;text-align:center;}
 .host-cta a{display:inline-block;margin-top:0.75rem;background:#c5a572;color:#1e3a5f;font-weight:800;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;}
+.hero-row{display:flex;gap:2rem;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:1.5rem;}
+.hero-text{flex:2;min-width:280px;}
+.hero-text h1{margin-bottom:0.4rem;}
+.hero-cta{flex:1;min-width:220px;max-width:280px;background:#1e3a5f;color:white;padding:1.1rem 1.25rem;border-radius:12px;text-align:center;}
+.hero-cta p{margin:0.3rem 0 0;font-size:0.85rem;color:#c9d4e0;}
+.hero-cta a{display:inline-block;margin-top:0.65rem;background:#c5a572;color:#1e3a5f;font-weight:800;text-decoration:none;padding:0.55rem 1.1rem;border-radius:8px;font-size:0.85rem;}
 footer.site-footer{background:#152c48;color:#c9d4e0;padding:2.5rem 0;margin-top:auto;font-size:0.9rem;}
 footer.site-footer .twc-about{display:flex;gap:1.25rem;align-items:flex-start;padding-bottom:1.5rem;margin-bottom:1.5rem;border-bottom:1px solid rgba(255,255,255,0.15);}
 footer.site-footer .twc-about img{height:56px;width:56px;border-radius:10px;background:white;padding:4px;flex-shrink:0;}
@@ -174,6 +180,17 @@ function hostCta() {
   return `<div class="host-cta">
 <strong>Host a trivia night?</strong>
 <p style="margin:0.4rem 0 0;">Add it free, no account needed. Want to edit it later? Log in with Discord on TWC and claim your listing.</p>
+<a href="${TWC_SITE_URL}/input.html">Add your event on TWC &rarr;</a>
+</div>`;
+}
+
+// Compact version of the same CTA, for the homepage hero row (see
+// renderTopIndex) - same message and link, just sized to sit beside the
+// heading instead of spanning the full width at the bottom of the page.
+function hostCtaCompact() {
+  return `<div class="hero-cta">
+<strong>Host a trivia night?</strong>
+<p>Free, no account needed.</p>
 <a href="${TWC_SITE_URL}/input.html">Add your event on TWC &rarr;</a>
 </div>`;
 }
@@ -291,12 +308,16 @@ function renderTopIndex(countries) {
     .join('\n');
 
   const body = `
+<div class="hero-row">
+<div class="hero-text">
 <h1>Find a Trivia Night Near You</h1>
-<p class="lede">Real, active trivia nights near you, brought to you by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>. TWC Certified hosts - verified members held to real quality standards - are highlighted everywhere you see them.</p>
+<p class="lede">Real, active trivia nights near you, brought to you by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>. TWC Certified hosts are highlighted everywhere you see them.</p>
+</div>
+${hostCtaCompact()}
+</div>
 ${mapSection()}
 <h2 style="border-bottom:2px solid #c5a572;padding-bottom:0.35rem;">Or browse by country</h2>
 ${groups}
-${hostCta()}
 `;
   return pageShell({
     title: 'Find Trivia Nights Near You - TriviaByMe',
