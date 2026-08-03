@@ -396,7 +396,7 @@ function renderCityPage(city, countryLabel, regionLabel) {
   const sortedEvents = city.events.slice().sort((a, b) => (b.certified ? 1 : 0) - (a.certified ? 1 : 0));
   const hasCertified = sortedEvents.some((e) => e.certified);
   const certifiedExplainer = hasCertified
-    ? `<p class="certified-note"><span class="badge">TWC Certified</span> events are run by verified members of the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>, held to real quality and reliability standards - not just anyone with a microphone.</p>`
+    ? `<p class="certified-note"><span class="badge">TWC Certified</span> events are run by verified members of the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>, held to real quality and reliability standards.</p>`
     : '';
 
   const eventRows = sortedEvents.map((e) => {
