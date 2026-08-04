@@ -327,7 +327,7 @@ ${groups}
 `;
   return pageShell({
     title: 'Find Trivia Nights Near You - TriviaByMe',
-    description: 'Browse real, active trivia nights on an interactive map, or by country, state, or province.',
+    description: "Find trivia nights near you, courtesy of the Trivia Writers' Co-Op.",
     canonicalPath: '/',
     bodyHtml: body,
     extraHead: MAP_HEAD,
