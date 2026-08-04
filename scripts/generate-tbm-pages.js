@@ -27,10 +27,49 @@ const { SPREADSHEET_ID, getSheetsClient } = require('./lib/sheets');
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const STATIC_DIR = path.join(__dirname, '..', 'static');
 const SITE_URL = 'https://triviabyme.com';
+const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 function writeFileEnsured(filePath, content) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, content);
+}
+
+function renderEventCard(e, city) {
+  const jsonLd = JSON.stringify(eventJsonLd(e, city)).replace(/</g, '\\u003c');
+  const directoryLink = e.directoryUrl
+    ? `<a class="directory-link" href="${escapeHtml(e.directoryUrl)}" target="_blank" rel="noopener">See ${escapeHtml(e.companyName || e.hostName)}'s full profile on TWC &rarr;</a>`
+    : '';
+  return `
+      <div class="event-card">
+        <h3>${escapeHtml(e.venueName || e.companyName || 'Trivia Night')}${e.certified ? ' <span class="badge">TWC Certified</span>' : ''}</h3>
+        <p class="event-meta">${escapeHtml(e.day)} ${escapeHtml(e.time)} ${escapeHtml(e.timezone)}${e.frequency ? ' - ' + escapeHtml(e.frequency) : ''}</p>
+        <p class="event-host">Hosted by ${escapeHtml(e.companyName || e.hostName)}</p>
+        ${e.address ? `<p class="event-address">${escapeHtml(e.address)}</p>` : ''}
+        ${directoryLink}
+        <script type="application/ld+json">${jsonLd}</script>
+      </div>`;
+}
+
+// Groups a city's events by day of week (Monday-first, matching the sign-up
+// form's own dropdown order) so a page with a dozen-plus events reads as
+// scannable day sections instead of one long undifferentiated list. Any day
+// value that doesn't match the 7 known names (bad/legacy data) still gets
+// shown, grouped under "Other", rather than silently dropped.
+function renderDayGroupedEvents(sortedEvents, city) {
+  const byDay = new Map();
+  sortedEvents.forEach((e) => {
+    const key = DAY_ORDER.includes(e.day) ? e.day : 'Other';
+    if (!byDay.has(key)) byDay.set(key, []);
+    byDay.get(key).push(e);
+  });
+
+  return [...DAY_ORDER, 'Other']
+    .filter((day) => byDay.has(day))
+    .map((day) => {
+      const heading = day === 'Other' ? 'Other Trivia Nights' : `${day} Night Trivia`;
+      const cards = byDay.get(day).map((e) => renderEventCard(e, city)).join('\n');
+      return `<h2 class="day-heading">${escapeHtml(heading)}</h2>\n<div class="event-grid">\n${cards}\n</div>`;
+    }).join('\n');
 }
 
 // public/ is fully rebuilt from scratch every run (see main()), since every
@@ -118,7 +157,10 @@ ul.link-grid{list-style:none;padding:0;margin:0;columns:2;gap:1rem;}
 ul.link-grid li{background:white;border-radius:10px;padding:0.8rem 1.1rem;margin-bottom:0.6rem;box-shadow:0 2px 8px rgba(30,58,95,0.07);break-inside:avoid;}
 ul.link-grid li a{font-weight:700;text-decoration:none;color:#1e3a5f;}
 ul.link-grid li a:hover{text-decoration:underline;}
-.event-card{background:white;border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1rem;box-shadow:0 2px 10px rgba(30,58,95,0.08);}
+.day-heading{font-size:1.15rem;color:#1e3a5f;margin:1.75rem 0 0.75rem;padding-bottom:0.35rem;border-bottom:2px solid #c5a572;}
+.day-heading:first-of-type{margin-top:1rem;}
+.event-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin-bottom:0.5rem;}
+.event-card{background:white;border-radius:12px;padding:1.25rem 1.5rem;box-shadow:0 2px 10px rgba(30,58,95,0.08);}
 .event-card h3{margin:0 0 0.4rem;color:#1e3a5f;}
 .event-meta,.event-host,.event-address{margin:0.2rem 0;color:#555;font-size:0.92rem;}
 .badge{display:inline-block;background:#c5a572;color:#1e3a5f;font-size:0.7rem;font-weight:800;padding:0.15rem 0.55rem;border-radius:4px;vertical-align:middle;}
@@ -399,21 +441,7 @@ function renderCityPage(city, countryLabel, regionLabel) {
     ? `<p class="certified-note"><span class="badge">TWC Certified</span> What does "TWC Certified" mean? These hosts are vetted by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a> for quality and reliability.</p>`
     : '';
 
-  const eventRows = sortedEvents.map((e) => {
-    const jsonLd = JSON.stringify(eventJsonLd(e, city)).replace(/</g, '\\u003c');
-    const directoryLink = e.directoryUrl
-      ? `<a class="directory-link" href="${escapeHtml(e.directoryUrl)}" target="_blank" rel="noopener">See ${escapeHtml(e.companyName || e.hostName)}'s full profile on TWC &rarr;</a>`
-      : '';
-    return `
-      <div class="event-card">
-        <h3>${escapeHtml(e.venueName || e.companyName || 'Trivia Night')}${e.certified ? ' <span class="badge">TWC Certified</span>' : ''}</h3>
-        <p class="event-meta">${escapeHtml(e.day)} ${escapeHtml(e.time)} ${escapeHtml(e.timezone)}${e.frequency ? ' - ' + escapeHtml(e.frequency) : ''}</p>
-        <p class="event-host">Hosted by ${escapeHtml(e.companyName || e.hostName)}</p>
-        ${e.address ? `<p class="event-address">${escapeHtml(e.address)}</p>` : ''}
-        ${directoryLink}
-        <script type="application/ld+json">${jsonLd}</script>
-      </div>`;
-  }).join('\n');
+  const eventRows = renderDayGroupedEvents(sortedEvents, city);
 
   const crumbLabel = regionLabel && regionLabel !== countryLabel ? regionLabel : countryLabel;
   const crumbSlug = regionLabel && regionLabel !== countryLabel ? city.tbmRegionSlug : slugify(countryLabel);
