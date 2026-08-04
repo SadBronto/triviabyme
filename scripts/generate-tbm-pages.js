@@ -390,14 +390,13 @@ function renderCityPage(city, countryLabel, regionLabel) {
   const placeName = regionLabel && regionLabel !== countryLabel
     ? `${titleCase(city.city)}, ${regionLabel}`
     : `${titleCase(city.city)}, ${countryLabel}`;
-  const count = city.events.length;
 
   // TWC Certified first, always - the badge should mean something here more
   // than anywhere else, since surfacing it is the entire point of TBM.
   const sortedEvents = city.events.slice().sort((a, b) => (b.certified ? 1 : 0) - (a.certified ? 1 : 0));
   const hasCertified = sortedEvents.some((e) => e.certified);
   const certifiedExplainer = hasCertified
-    ? `<p class="certified-note"><span class="badge">TWC Certified</span> events are run by verified members of the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a>, held to real quality and reliability standards.</p>`
+    ? `<p class="certified-note"><span class="badge">TWC Certified</span> What does "TWC Certified" mean? These hosts are vetted by the <a href="${TWC_SITE_URL}/">Trivia Writers' Co-Op</a> for quality and reliability.</p>`
     : '';
 
   const eventRows = sortedEvents.map((e) => {
@@ -419,17 +418,19 @@ function renderCityPage(city, countryLabel, regionLabel) {
   const crumbLabel = regionLabel && regionLabel !== countryLabel ? regionLabel : countryLabel;
   const crumbSlug = regionLabel && regionLabel !== countryLabel ? city.tbmRegionSlug : slugify(countryLabel);
 
+  const lede = `Looking for something to do in ${escapeHtml(placeName)} this week? Maybe one of these awesome trivia nights can provide some entertainment for you!`;
+
   const body = `
 <p class="crumbs"><a href="/">All Countries</a> &rsaquo; <a href="/${slugify(countryLabel)}.html">${escapeHtml(countryLabel)}</a> &rsaquo; <a href="/${crumbSlug}.html">${escapeHtml(crumbLabel)}</a></p>
-<h1>Trivia Nights in ${escapeHtml(placeName)}</h1>
-<p class="lede">${count === 1 ? "There's one trivia night we know of here." : `There are ${count} trivia nights we know of here.`}</p>
+<h1>${escapeHtml(placeName)} Trivia Nights</h1>
+<p class="lede">${lede}</p>
 ${certifiedExplainer}
 ${eventRows}
 ${hostCta()}
 `;
   return pageShell({
-    title: `Trivia Nights in ${placeName} - TriviaByMe`,
-    description: `${count} trivia night${count === 1 ? '' : 's'} in ${placeName}.`,
+    title: `${placeName} Trivia Nights - TriviaByMe`,
+    description: `Looking for something to do in ${placeName} this week? Maybe one of these awesome trivia nights can provide some entertainment for you!`,
     canonicalPath: `/${city.tbmSlug}.html`,
     bodyHtml: body,
   });
