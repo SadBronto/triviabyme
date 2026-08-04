@@ -322,7 +322,7 @@ function renderTopIndex(countries) {
 ${hostCtaCompact()}
 </div>
 ${mapSection()}
-<h2 style="border-bottom:2px solid #c5a572;padding-bottom:0.35rem;">Or browse by Locations</h2>
+<h2 style="border-bottom:2px solid #c5a572;padding-bottom:0.35rem;">Or browse by location</h2>
 ${groups}
 `;
   return pageShell({
