@@ -21,7 +21,8 @@ const {
   slugify, escapeHtml, titleCase, formatLocationLabel,
   fetchInPersonEvents, fetchBusinessProfilesByUserId, attachDirectoryLinks,
   buildLocationTree, eventJsonLd, TWC_SITE_URL,
-} = require('./lib/events-data');
+} = require('trivia-events-shared');
+const { SPREADSHEET_ID, getSheetsClient } = require('./lib/sheets');
 
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const STATIC_DIR = path.join(__dirname, '..', 'static');
@@ -478,9 +479,10 @@ function writeEventsJson(cities) {
 
 async function main() {
   console.log('[generate-tbm-pages] Fetching events and business profiles...');
+  const sheets = getSheetsClient(['https://www.googleapis.com/auth/spreadsheets.readonly']);
   const [rawEvents, profilesByUserId] = await Promise.all([
-    fetchInPersonEvents(),
-    fetchBusinessProfilesByUserId(),
+    fetchInPersonEvents(sheets, SPREADSHEET_ID),
+    fetchBusinessProfilesByUserId(sheets, SPREADSHEET_ID),
   ]);
   const events = attachDirectoryLinks(rawEvents, profilesByUserId);
   console.log(`[generate-tbm-pages] ${events.length} events, ${profilesByUserId.size} business profiles.`);
