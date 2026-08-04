@@ -168,11 +168,65 @@ function buildLocationTree(events) {
   return { cities: cityList, regions: Array.from(regions.values()) };
 }
 
+const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const WEEKDAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+// UTC offset (minutes, ISO sign convention) that `timeZone` observes at the
+// given instant - read off the zone's own wall-clock rendering of that
+// instant rather than a fixed constant, so DST is handled correctly.
+function offsetMinutesAt(instant, timeZone) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone, hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit',
+  }).formatToParts(instant).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+  const hour = parts.hour === '24' ? '00' : parts.hour;
+  const asIfUTC = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +hour, +parts.minute, +parts.second);
+  return Math.round((asIfUTC - instant.getTime()) / 60000);
+}
+
+function formatOffset(minutes) {
+  const sign = minutes < 0 ? '-' : '+';
+  const abs = Math.abs(minutes);
+  return `${sign}${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
+}
+
+// ISO 8601 startDate for the next upcoming occurrence of a weekly recurring
+// event, from the plain-language fields the sign-up form collects (day
+// name, "7:00 PM"-style time, IANA timezone). Google's Event rich-result
+// eligibility requires startDate - this is the minimum viable version of
+// that (one occurrence, not a full recurrence rule).
+function nextOccurrenceISO(dayName, timeStr, timezone) {
+  const targetDow = WEEKDAY_NAMES.indexOf(dayName);
+  const m = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(timeStr || '').trim());
+  if (targetDow < 0 || !m || !timezone) return undefined;
+  let hour = parseInt(m[1], 10) % 12;
+  if (/PM/i.test(m[3])) hour += 12;
+  const minute = parseInt(m[2], 10);
+
+  let todayParts;
+  try {
+    todayParts = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short',
+    }).formatToParts(new Date()).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+  } catch (e) {
+    return undefined; // invalid/unrecognized timezone string
+  }
+  const todayDow = WEEKDAY_SHORT.indexOf(todayParts.weekday);
+  if (todayDow < 0) return undefined;
+  const daysAhead = (targetDow - todayDow + 7) % 7;
+
+  const targetDate = new Date(Date.UTC(+todayParts.year, +todayParts.month - 1, +todayParts.day + daysAhead, 12, 0, 0));
+  const offset = offsetMinutesAt(targetDate, timezone);
+  const localAsUTC = Date.UTC(targetDate.getUTCFullYear(), targetDate.getUTCMonth(), targetDate.getUTCDate(), hour, minute, 0);
+  return new Date(localAsUTC).toISOString().slice(0, 19) + formatOffset(offset);
+}
+
 function eventJsonLd(event, city) {
   return {
     '@context': 'https://schema.org',
     '@type': 'Event',
     name: `${event.eventType || 'Trivia'} Night at ${event.venueName || event.companyName || 'TBD'}`,
+    startDate: nextOccurrenceISO(event.day, event.time, event.timezone),
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     eventStatus: 'https://schema.org/EventScheduled',
     location: {
