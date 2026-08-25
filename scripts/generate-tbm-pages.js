@@ -214,6 +214,8 @@ ${bodyHtml}
 <a href="${TWC_SITE_URL}/about-us.html">About TWC</a>
 <a href="${TWC_SITE_URL}/business-directory.html">Business Directory</a>
 <a href="${TWC_SITE_URL}/endorsements.html">Endorsements</a>
+<a href="/privacy.html">Privacy</a>
+<a href="/terms.html">Terms</a>
 </div>
 </div>
 </footer>
