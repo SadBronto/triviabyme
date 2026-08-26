@@ -262,6 +262,7 @@ const MAP_HEAD = `
 .map-legend .swatch{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:0.35rem;vertical-align:middle;}
 .map-legend .swatch.certified{background:#c5a572;}
 .map-legend .swatch.regular{background:#1e3a5f;}
+.map-legend .swatch.twc-star{border-radius:0;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);filter:drop-shadow(0 0 3px #1e3a5f);}
 </style>`;
 
 const MAP_SCRIPT = `
@@ -292,14 +293,27 @@ const MAP_SCRIPT = `
 
     const cluster = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 70 });
     events.forEach((e) => {
-      const marker = L.marker([e.lat, e.lng], {
-        icon: L.divIcon({
-          className: '',
-          html: '<div style="width:16px;height:16px;border-radius:50%;background:' + (e.certified ? '#c5a572' : '#1e3a5f') + ';border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.4);"></div>',
-          iconSize: [16, 16],
-          iconAnchor: [8, 8],
-        }),
-      });
+      // Real TWC events (hosted by an actual Co-Op-listed business, not a
+      // crawler-scraped guess) get a star instead of a plain dot, plus a
+      // colored glow, so they stand out from crawler-sourced pins at a
+      // glance - independent of the certified gold/navy color, which only
+      // marks the "TWC Certified" checkbox subset.
+      const color = e.certified ? '#c5a572' : '#1e3a5f';
+      const isTwc = e.source === 'twc';
+      const icon = isTwc
+        ? L.divIcon({
+            className: '',
+            html: '<div style="width:24px;height:24px;background:' + color + ';clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);filter:drop-shadow(0 0 4px ' + color + ') drop-shadow(0 1px 2px rgba(0,0,0,0.5));"></div>',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+          })
+        : L.divIcon({
+            className: '',
+            html: '<div style="width:16px;height:16px;border-radius:50%;background:' + color + ';border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.4);"></div>',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+          });
+      const marker = L.marker([e.lat, e.lng], { icon: icon });
       const certifiedBadge = e.certified ? '<img src="${TWC_SITE_URL}/TWCSeal.png" style="width:26px;height:26px;float:right;">' : '';
       const directoryLink = e.directoryUrl ? '<a href="' + e.directoryUrl + '" target="_blank" rel="noopener" style="display:block;margin-top:0.4rem;font-weight:700;color:#1e3a5f;font-size:0.85rem;">See full profile on TWC &rarr;</a>' : '';
       marker.bindPopup(
@@ -330,7 +344,7 @@ const MAP_SCRIPT = `
 function mapSection() {
   return `
 <div id="map"></div>
-<div class="map-legend"><span><span class="swatch certified"></span>TWC Certified</span><span><span class="swatch regular"></span>Other listed trivia night</span></div>`;
+<div class="map-legend"><span><span class="swatch twc-star certified"></span>TWC Certified</span><span><span class="swatch twc-star regular"></span>Other TWC-listed trivia night</span><span><span class="swatch regular"></span>Other listed trivia night</span></div>`;
 }
 
 // ---- Page renderers -----------------------------------------------------
@@ -498,6 +512,7 @@ function writeEventsJson(cities) {
         time: e.time,
         timezone: e.timezone,
         certified: e.certified,
+        source: e.source,
         directoryUrl: e.directoryUrl || null,
         city: titleCase(city.city),
         cityUrl: `/${city.tbmSlug}.html`,
@@ -515,7 +530,12 @@ async function main() {
     fetchInPersonEvents(sheets, SPREADSHEET_ID),
     fetchBusinessProfilesByUserId(sheets, SPREADSHEET_ID),
   ]);
-  const twcEvents = attachDirectoryLinks(rawEvents, profilesByUserId);
+  // Tagged 'twc' vs 'crawler' so the map can make real TWC events (TWC's own
+  // hosts, submitted through TWC) visually stand out from crawler-sourced
+  // listings - independent of (and in addition to) the existing certified
+  // gold/navy color split, which only covers the "TWC Certified" checkbox
+  // subset of TWC events, not TWC-sourced-at-all.
+  const twcEvents = attachDirectoryLinks(rawEvents, profilesByUserId).map((e) => ({ ...e, source: 'twc' }));
 
   // Crawler-sourced events (see trivia-events-shared's fetchTbmCrawlerEvents
   // for the full story) - TBM only, TWC's own generator never calls this.
@@ -525,7 +545,7 @@ async function main() {
   // way the file-level fail-safe (see bottom of this file) would.
   let crawlerEvents = [];
   try {
-    crawlerEvents = await fetchTbmCrawlerEvents(sheets, SPREADSHEET_ID);
+    crawlerEvents = (await fetchTbmCrawlerEvents(sheets, SPREADSHEET_ID)).map((e) => ({ ...e, source: 'crawler' }));
   } catch (err) {
     console.warn('[generate-tbm-pages] Could not read TBM tab, continuing without crawler events:', err.message);
   }
