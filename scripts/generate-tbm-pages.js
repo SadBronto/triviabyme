@@ -252,6 +252,33 @@ function hostCtaCompact() {
 // missing/blank coordinate just quietly skips that one event on the map
 // instead of breaking anything (it's still fully browsable via the country/
 // region/city pages below).
+
+// 10-point star polygon on a 24x24 viewBox (outer radius 10, inner radius 4,
+// centered at 12,12). Shared shape between the static legend swatch
+// (rendered here, once, at build time) and the client-side marker/cluster
+// icons (MAP_SCRIPT's own copy of starSvg below, which has to be a literal
+// string since it runs in the browser, not here - keep the two in sync).
+const STAR_POINTS = '12,2 14.35,8.76 21.51,8.91 15.8,13.24 17.88,20.09 12,16 6.12,20.09 8.2,13.24 2.49,8.91 9.65,8.76';
+
+// Double-stroke technique: the identical shape drawn twice, a wider black
+// stroke underneath and a narrower white stroke on top, gives every marker a
+// crisp black-outside/white-inside ring that reads clearly against any map
+// tile color and doesn't depend on hue at all - unlike the certified gold/
+// navy fill, which several forms of colorblindness make hard to tell apart.
+// The same ring technique is used on plain circle markers too (a white
+// border plus a black box-shadow ring) so every indicator on the map,
+// TWC-star or not, gets it.
+function starSvg(sizePx, fillColor, label) {
+  const labelSvg = label
+    ? '<text x="12" y="15" text-anchor="middle" font-size="8" font-weight="700" fill="#fff">' + label + '</text>'
+    : '';
+  return '<svg width="' + sizePx + '" height="' + sizePx + '" viewBox="0 0 24 24" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));">'
+    + '<polygon points="' + STAR_POINTS + '" fill="' + fillColor + '" stroke="#000" stroke-width="3"/>'
+    + '<polygon points="' + STAR_POINTS + '" fill="' + fillColor + '" stroke="#fff" stroke-width="1.6"/>'
+    + labelSvg
+    + '</svg>';
+}
+
 const MAP_HEAD = `
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" crossorigin="anonymous" />
@@ -259,10 +286,9 @@ const MAP_HEAD = `
 <style>
 #map{height:480px;border-radius:12px;box-shadow:0 2px 10px rgba(30,58,95,0.1);margin-bottom:0.75rem;}
 .map-legend{display:flex;gap:1.25rem;align-items:center;font-size:0.85rem;color:#555;margin-bottom:2rem;flex-wrap:wrap;}
-.map-legend .swatch{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:0.35rem;vertical-align:middle;}
-.map-legend .swatch.certified{background:#c5a572;}
-.map-legend .swatch.regular{background:#1e3a5f;}
-.map-legend .swatch.twc-star{border-radius:0;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);filter:drop-shadow(0 0 3px #1e3a5f);}
+.map-legend .swatch{display:inline-flex;margin-right:0.35rem;vertical-align:middle;}
+.map-legend .swatch svg{display:block;}
+.map-legend .swatch.regular{display:inline-block;width:12px;height:12px;border-radius:50%;background:#1e3a5f;border:2px solid #fff;box-shadow:0 0 0 1.5px #000;margin-right:0.35rem;vertical-align:middle;}
 </style>`;
 
 const MAP_SCRIPT = `
@@ -274,6 +300,31 @@ const MAP_SCRIPT = `
     const d = document.createElement('div');
     d.textContent = v == null ? '' : String(v);
     return d.innerHTML;
+  }
+  // Literal copy of generate-tbm-pages.js's own starSvg()/STAR_POINTS -
+  // has to be duplicated as a string since this whole block runs in the
+  // browser, not at build time. Keep the two in sync.
+  const STAR_POINTS = '12,2 14.35,8.76 21.51,8.91 15.8,13.24 17.88,20.09 12,16 6.12,20.09 8.2,13.24 2.49,8.91 9.65,8.76';
+  function starSvg(sizePx, fillColor, label) {
+    const labelSvg = label
+      ? '<text x="12" y="15" text-anchor="middle" font-size="8" font-weight="700" fill="#fff">' + label + '</text>'
+      : '';
+    return '<svg width="' + sizePx + '" height="' + sizePx + '" viewBox="0 0 24 24" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));">'
+      + '<polygon points="' + STAR_POINTS + '" fill="' + fillColor + '" stroke="#000" stroke-width="3"/>'
+      + '<polygon points="' + STAR_POINTS + '" fill="' + fillColor + '" stroke="#fff" stroke-width="1.6"/>'
+      + labelSvg
+      + '</svg>';
+  }
+  // Same black-outside/white-inside double ring as starSvg, on a plain
+  // circle - every non-TWC marker/cluster gets this too, so visibility
+  // against the map tiles never depends on the certified gold/navy fill
+  // color alone.
+  function circleHtml(sizePx, fillColor, label) {
+    return '<div style="width:' + sizePx + 'px;height:' + sizePx + 'px;border-radius:50%;background:' + fillColor + ';border:2px solid #fff;box-shadow:0 0 0 1.5px #000,0 1px 3px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;">' + (label || '') + '</div>';
+  }
+  function pinIcon(isStar, sizePx, fillColor, label) {
+    const html = isStar ? starSvg(sizePx, fillColor, label) : circleHtml(sizePx, fillColor, label);
+    return L.divIcon({ className: '', html: html, iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2] });
   }
   fetch('/events.json').then((r) => r.json()).then((events) => {
     const map = L.map('map', {
@@ -291,29 +342,38 @@ const MAP_SCRIPT = `
       maxZoom: 18,
     }).addTo(map);
 
-    const cluster = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 70 });
+    const cluster = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      maxClusterRadius: 70,
+      // A cluster is a star whenever at least one real TWC event is inside
+      // it, so zooming in from a wide star cluster naturally reveals: a mix
+      // of star/circle sub-clusters once TWC and non-TWC pins split apart
+      // into different clusters, then eventually the individual pins
+      // themselves, where only the actual TWC markers stay stars. Cluster
+      // fill is always navy (a cluster can hold both certified and non-
+      // certified events at once, so there's no single certified/non color
+      // to give it) - the count label plus this same navy fill is exactly
+      // what Leaflet.markercluster's own default cluster icons already look
+      // like, just reshaped to a star when it applies.
+      iconCreateFunction: function (c) {
+        const hasTwc = c.getAllChildMarkers().some(function (m) { return m.twcSource; });
+        const count = c.getChildCount();
+        const size = count < 10 ? 34 : count < 100 ? 40 : 48;
+        return pinIcon(hasTwc, size, '#1e3a5f', String(count));
+      },
+    });
     events.forEach((e) => {
       // Real TWC events (hosted by an actual Co-Op-listed business, not a
-      // crawler-scraped guess) get a star instead of a plain dot, plus a
-      // colored glow, so they stand out from crawler-sourced pins at a
-      // glance - independent of the certified gold/navy color, which only
-      // marks the "TWC Certified" checkbox subset.
+      // crawler-scraped guess) get a star instead of a plain dot, so they
+      // stand out from crawler-sourced pins at a glance - independent of
+      // the certified gold/navy color, which only marks the "TWC Certified"
+      // checkbox subset.
       const color = e.certified ? '#c5a572' : '#1e3a5f';
       const isTwc = e.source === 'twc';
-      const icon = isTwc
-        ? L.divIcon({
-            className: '',
-            html: '<div style="width:24px;height:24px;background:' + color + ';clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);filter:drop-shadow(0 0 4px ' + color + ') drop-shadow(0 1px 2px rgba(0,0,0,0.5));"></div>',
-            iconSize: [24, 24],
-            iconAnchor: [12, 12],
-          })
-        : L.divIcon({
-            className: '',
-            html: '<div style="width:16px;height:16px;border-radius:50%;background:' + color + ';border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.4);"></div>',
-            iconSize: [16, 16],
-            iconAnchor: [8, 8],
-          });
+      const size = isTwc ? 26 : 18;
+      const icon = pinIcon(isTwc, size, color);
       const marker = L.marker([e.lat, e.lng], { icon: icon });
+      marker.twcSource = isTwc;
       const certifiedBadge = e.certified ? '<img src="${TWC_SITE_URL}/TWCSeal.png" style="width:26px;height:26px;float:right;">' : '';
       const directoryLink = e.directoryUrl ? '<a href="' + e.directoryUrl + '" target="_blank" rel="noopener" style="display:block;margin-top:0.4rem;font-weight:700;color:#1e3a5f;font-size:0.85rem;">See full profile on TWC &rarr;</a>' : '';
       marker.bindPopup(
@@ -344,7 +404,7 @@ const MAP_SCRIPT = `
 function mapSection() {
   return `
 <div id="map"></div>
-<div class="map-legend"><span><span class="swatch twc-star certified"></span>TWC Certified</span><span><span class="swatch twc-star regular"></span>Other TWC-listed trivia night</span><span><span class="swatch regular"></span>Other listed trivia night</span></div>`;
+<div class="map-legend"><span><span class="swatch">${starSvg(16, '#c5a572')}</span>TWC Certified</span><span><span class="swatch">${starSvg(16, '#1e3a5f')}</span>Other TWC-listed trivia night</span><span><span class="swatch regular"></span>Other listed trivia night</span><span style="color:#888;">Clusters of pins are stars if any TWC event is inside</span></div>`;
 }
 
 // ---- Page renderers -----------------------------------------------------
