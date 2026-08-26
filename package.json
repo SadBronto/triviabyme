@@ -5,6 +5,6 @@
   "description": "TriviaByMe - static trivia-night search site, sister to triviawriterscoop.com",
   "dependencies": {
     "googleapis": "^167.0.0",
-    "trivia-events-shared": "https://github.com/SadBronto/trivia-events-shared/archive/d1defe7aae6435c504e6febe8bcbbe46388eacea.tar.gz"
+    "trivia-events-shared": "https://github.com/SadBronto/trivia-events-shared/archive/b8535c99bd24f52bb11a099291dec3af10dedf4e.tar.gz"
   }
 }

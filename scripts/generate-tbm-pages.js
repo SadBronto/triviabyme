@@ -332,22 +332,36 @@ const MAP_SCRIPT = `
   }
   fetch('/events.json').then((r) => r.json()).then((events) => {
     const map = L.map('map', {
-      worldCopyJump: true,
+      // worldCopyJump removed - it exists to let panning jump seamlessly
+      // across the antimeridian when there's no hard boundary stopping
+      // you, which maxBounds below already does, making it pointless here.
+      // (Tested directly whether it was also misprojecting far-side-of-
+      // the-world markers, since that's what a previous zoom-out fix
+      // seemed to expose - it wasn't: a controlled side-by-side test with
+      // worldCopyJump on vs off produced pixel-identical marker positions
+      // both ways. Leaving it off anyway since it's genuinely unneeded.)
       maxBounds: [[-90, -180], [90, 180]],
       maxBoundsViscosity: 1.0,
-      // minZoom 1 (not 2) so the whole world actually fits inside the map's
-      // fixed pixel width at once - at zoom 2 the world is 1024px wide,
-      // wider than this page's content column, so it was never actually
-      // possible to zoom out and see everything at once even though
-      // nothing else was stopping you from trying.
-      minZoom: 1,
+      // Reverted to minZoom 2 (was briefly 1, to let the whole world fit
+      // in view at once) - the real problem zooming out that far exposed
+      // wasn't marker projection, it was Leaflet.markercluster's own
+      // cluster-anchor behavior: a cluster's icon isn't positioned at its
+      // members' geographic centroid, so at world-scale zoom a large
+      // cluster can visually land somewhere that looks entirely
+      // disconnected from where its events actually are (hit live:
+      // Australia-sized clusters appearing to sit off the coast of South
+      // America/West Africa). That was always going to happen at zoom 1 -
+      // it just was never reachable, and therefore never visible, before
+      // minZoom allowed it. Not seeing the whole world in one glance is a
+      // smaller problem than a map that looks broken.
+      minZoom: 2,
     }).setView([39.8283, -98.5795], 4);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
       noWrap: true,
       bounds: [[-85, -180], [85, 180]],
-      minZoom: 1,
+      minZoom: 2,
       maxZoom: 18,
     }).addTo(map);
 
@@ -651,7 +665,13 @@ async function main() {
   });
 
   tree.cities.forEach((city) => {
-    writeFileEnsured(path.join(PUBLIC_DIR, `${city.tbmSlug}.html`), renderCityPage(city, formatLocationLabel(city.country), city.state ? formatLocationLabel(city.state) : formatLocationLabel(city.country)));
+    // city.state is already canonical (buildLocationTree's own
+    // canonicalState() output, not raw input) - reformatting it here was
+    // the same redundant-and-wrong double-format bug fixed in
+    // trivia-events-shared's buildLocationTree (see that repo's own
+    // commit): titleCase capitalizes every word, turning a correct
+    // "Newfoundland and Labrador" into a wrong "Newfoundland And Labrador".
+    writeFileEnsured(path.join(PUBLIC_DIR, `${city.tbmSlug}.html`), renderCityPage(city, formatLocationLabel(city.country), city.state || formatLocationLabel(city.country)));
   });
 
   const mappedCount = writeEventsJson(tree.cities);
