@@ -1,14 +1,5 @@
 [build]
-  # The git-config line is a required workaround, not decoration: npm
-  # internally rewrites github.com git dependencies (trivia-events-shared)
-  # back to an SSH URL regardless of what scheme is actually specified in
-  # package.json, and Netlify's build environment has no SSH key/deploy
-  # key configured for it - confirmed by a real failed build ("Permission
-  # denied (publickey)") even after package.json was already pointed at
-  # an explicit https:// URL. This tells git to substitute https for any
-  # ssh://git@github.com/ URL before npm ever gets to it, which works with
-  # zero credentials since the repo is public.
-  command = "git config --global url.\"https://github.com/\".insteadOf \"ssh://git@github.com/\" && npm install && node scripts/generate-tbm-pages.js"
+  command = "npm install && node scripts/generate-tbm-pages.js"
   publish = "public"
 
 # No [functions] block on purpose - TBM has no live backend of any kind.
