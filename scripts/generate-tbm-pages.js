@@ -19,7 +19,7 @@ const fs = require('fs');
 const path = require('path');
 const {
   slugify, escapeHtml, titleCase, formatLocationLabel,
-  fetchInPersonEvents, fetchBusinessProfilesByUserId, attachDirectoryLinks,
+  fetchInPersonEvents, fetchTbmCrawlerEvents, fetchBusinessProfilesByUserId, attachDirectoryLinks,
   buildLocationTree, eventJsonLd, TWC_SITE_URL,
 } = require('trivia-events-shared');
 const { SPREADSHEET_ID, getSheetsClient } = require('./lib/sheets');
@@ -515,8 +515,23 @@ async function main() {
     fetchInPersonEvents(sheets, SPREADSHEET_ID),
     fetchBusinessProfilesByUserId(sheets, SPREADSHEET_ID),
   ]);
-  const events = attachDirectoryLinks(rawEvents, profilesByUserId);
-  console.log(`[generate-tbm-pages] ${events.length} events, ${profilesByUserId.size} business profiles.`);
+  const twcEvents = attachDirectoryLinks(rawEvents, profilesByUserId);
+
+  // Crawler-sourced events (see trivia-events-shared's fetchTbmCrawlerEvents
+  // for the full story) - TBM only, TWC's own generator never calls this.
+  // Isolated in its own try/catch: a problem reading the "TBM" tab (missing,
+  // malformed, still empty) should degrade to "just show TWC's real events,
+  // like before this feature existed," never take down the whole build the
+  // way the file-level fail-safe (see bottom of this file) would.
+  let crawlerEvents = [];
+  try {
+    crawlerEvents = await fetchTbmCrawlerEvents(sheets, SPREADSHEET_ID);
+  } catch (err) {
+    console.warn('[generate-tbm-pages] Could not read TBM tab, continuing without crawler events:', err.message);
+  }
+
+  const events = [...twcEvents, ...crawlerEvents];
+  console.log(`[generate-tbm-pages] ${twcEvents.length} TWC events + ${crawlerEvents.length} crawler events = ${events.length} total, ${profilesByUserId.size} business profiles.`);
 
   const tree = buildTbmTree(events);
   console.log(`[generate-tbm-pages] ${tree.countries.length} countries, ${tree.regions.length} regions, ${tree.cities.length} cities.`);
