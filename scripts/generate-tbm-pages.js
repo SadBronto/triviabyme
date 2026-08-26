@@ -274,7 +274,13 @@ function starSvg(sizePx, fillColor, label) {
   const labelSvg = label
     ? '<text x="12" y="15.5" text-anchor="middle" font-size="9" font-weight="700" font-family="sans-serif" fill="#1e3a5f">' + label + '</text>'
     : '';
-  return '<svg width="' + sizePx + '" height="' + sizePx + '" viewBox="-2 -2 28 28">'
+  // A soft color-matched glow on top of the hard black/white ring - gold
+  // (#c5a572) is a muted, low-saturation color close to the map tiles' own
+  // beige tones, so even with the same ring treatment as navy it read as
+  // less prominent, not more, defeating the entire point of marking
+  // certified events specially. The glow doesn't replace the ring (still
+  // outside-only, still legible) - it adds ambient presence around it.
+  return '<svg width="' + sizePx + '" height="' + sizePx + '" viewBox="-2 -2 28 28" style="filter:drop-shadow(0 0 5px ' + fillColor + ') drop-shadow(0 0 5px ' + fillColor + ');">'
     + '<polygon points="' + STAR_130 + '" fill="#000"/>'
     + '<polygon points="' + STAR_115 + '" fill="#fff"/>'
     + '<polygon points="' + STAR_100 + '" fill="' + fillColor + '"/>'
@@ -291,13 +297,14 @@ const MAP_HEAD = `
 .map-legend{display:flex;gap:1.25rem;align-items:center;font-size:0.85rem;color:#555;margin-bottom:2rem;flex-wrap:wrap;}
 .map-legend .swatch{display:inline-flex;margin-right:0.35rem;vertical-align:middle;}
 .map-legend .swatch svg{display:block;}
-.map-legend .swatch.regular{display:inline-block;width:12px;height:12px;border-radius:50%;background:#1e3a5f;border:2px solid #fff;box-shadow:0 0 0 1.5px #000;margin-right:0.35rem;vertical-align:middle;}
+.map-legend .swatch.regular{display:inline-block;width:12px;height:12px;border-radius:50%;background:#1e3a5f;border:1.5px solid rgba(255,255,255,0.75);box-shadow:0 0 0 3px rgba(0,0,0,0.25);margin-right:0.35rem;vertical-align:middle;}
 /* Leaflet.markercluster's own default cluster icon (colored by count -
-   green/yellow/orange-red - left completely alone below) just gets an
-   outside ring added on top, same black-then-white technique as the star:
-   box-shadow never overlaps the element's own background, so the cluster's
-   count number and its count-based color are both untouched. */
-.marker-cluster div{box-shadow:0 0 0 2px #fff,0 0 0 4px #000;}
+   green/yellow/orange-red - left completely alone below) gets a softened
+   outside ring for contrast - box-shadow never overlaps the element's own
+   background, so the count number and count-based color are untouched.
+   Kept deliberately lighter than the certified star's glow (see starSvg)
+   so a plain cluster never visually outweighs a certified one. */
+.marker-cluster div{box-shadow:0 0 0 1.5px rgba(255,255,255,0.75),0 0 0 3px rgba(0,0,0,0.25);}
 </style>`;
 
 const MAP_SCRIPT = `
@@ -320,18 +327,22 @@ const MAP_SCRIPT = `
     const labelSvg = label
       ? '<text x="12" y="15.5" text-anchor="middle" font-size="9" font-weight="700" font-family="sans-serif" fill="#1e3a5f">' + label + '</text>'
       : '';
-    return '<svg width="' + sizePx + '" height="' + sizePx + '" viewBox="-2 -2 28 28">'
+    return '<svg width="' + sizePx + '" height="' + sizePx + '" viewBox="-2 -2 28 28" style="filter:drop-shadow(0 0 5px ' + fillColor + ') drop-shadow(0 0 5px ' + fillColor + ');">'
       + '<polygon points="' + STAR_130 + '" fill="#000"/>'
       + '<polygon points="' + STAR_115 + '" fill="#fff"/>'
       + '<polygon points="' + STAR_100 + '" fill="' + fillColor + '"/>'
       + labelSvg
       + '</svg>';
   }
-  // Same black-outside/white-inside ring as starSvg, via a plain box-shadow
-  // instead of stacked shapes - box-shadow never overlaps a circle's own
-  // background, so this was already outside-only even before the star fix.
+  // Same outside-only ring as starSvg, via a plain box-shadow instead of
+  // stacked shapes (box-shadow never overlaps a circle's own background).
+  // Softer than the star's ring on purpose - solid black/white read as
+  // more visually dominant than the star's glow, which defeats the point
+  // of certified events being the ones that stand out. Semi-transparent
+  // rings still give every plain pin a contrast edge against the map
+  // tiles without competing with the certified stars for attention.
   function circleHtml(sizePx, fillColor) {
-    return '<div style="width:' + sizePx + 'px;height:' + sizePx + 'px;border-radius:50%;background:' + fillColor + ';box-shadow:0 0 0 2px #fff,0 0 0 4px #000;"></div>';
+    return '<div style="width:' + sizePx + 'px;height:' + sizePx + 'px;border-radius:50%;background:' + fillColor + ';box-shadow:0 0 0 1.5px rgba(255,255,255,0.75),0 0 0 3px rgba(0,0,0,0.25);"></div>';
   }
   function pinIcon(isStar, sizePx, fillColor, label) {
     const html = isStar ? starSvg(sizePx, fillColor, label) : circleHtml(sizePx, fillColor);
@@ -401,7 +412,12 @@ const MAP_SCRIPT = `
       // listing or a crawler-sourced one) is a circle. There's no third,
       // in-between visual category.
       const color = e.certified ? '#c5a572' : '#1e3a5f';
-      const size = e.certified ? 26 : 18;
+      // A star fills much less of its own bounding box than a circle does,
+      // so a star and circle of the same nominal size still read as the
+      // star being smaller - sized up further (not just given a glow) to
+      // actually compensate for that, on top of already being the bigger
+      // of the two on purpose.
+      const size = e.certified ? 34 : 18;
       const icon = pinIcon(e.certified, size, color);
       const marker = L.marker([e.lat, e.lng], { icon: icon });
       marker.certified = e.certified;
