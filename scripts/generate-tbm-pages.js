@@ -373,7 +373,21 @@ const MAP_SCRIPT = `
     }
     const cluster = L.markerClusterGroup({
       showCoverageOnHover: false,
-      maxClusterRadius: 70,
+      // A fixed pixel radius covers a proportionally HUGE real-world
+      // distance at low zoom - at zoom 2, 70px was merging markers on
+      // opposite coasts (thousands of miles apart) into one cluster with
+      // a single anchor point, which is why big clusters looked like they
+      // were floating over the ocean instead of over the country they
+      // actually represent - not a data bug (checked directly: the
+      // underlying coordinates are correct), just too aggressive a radius
+      // for how zoomed-out the map allows. Tighter at low zoom, normal
+      // (unchanged) from zoom 4 up, where 70px covers a much smaller,
+      // reasonable real-world area.
+      maxClusterRadius: function (zoom) {
+        if (zoom <= 2) return 15;
+        if (zoom === 3) return 30;
+        return 70;
+      },
       // A cluster containing at least one TWC Certified event gets a small
       // navy-and-gold star badge in the corner, on top of its normal
       // count-colored circle (the exact green/yellow/orange-red scheme
