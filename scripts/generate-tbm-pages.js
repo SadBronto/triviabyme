@@ -253,29 +253,28 @@ function hostCtaCompact() {
 // instead of breaking anything (it's still fully browsable via the country/
 // region/city pages below).
 
-// 10-point star polygon on a 24x24 viewBox (outer radius 10, inner radius 4,
-// centered at 12,12). Shared shape between the static legend swatch
-// (rendered here, once, at build time) and the client-side marker/cluster
-// icons (MAP_SCRIPT's own copy of starSvg below, which has to be a literal
-// string since it runs in the browser, not here - keep the two in sync).
-const STAR_POINTS = '12,2 14.35,8.76 21.51,8.91 15.8,13.24 17.88,20.09 12,16 6.12,20.09 8.2,13.24 2.49,8.91 9.65,8.76';
+// Three copies of the same 5-point star polygon, each scaled up around its
+// own center (12,12) - largest/black at the back, mid/white in the middle,
+// true-size/actual-color on top - so the border shows up ONLY outside the
+// star's real silhouette. A centered SVG stroke (the previous approach)
+// draws half its width inward, eating into the colored area and cramming
+// anything drawn inside it; stacking differently-sized copies of the same
+// shape never touches the inside at all, however thick the ring gets.
+// viewBox is padded out to -2..26 (28x28) to leave room for the largest
+// (1.3x) copy without clipping it.
+const STAR_100 = '12,2 14.35,8.76 21.51,8.91 15.8,13.24 17.88,20.09 12,16 6.12,20.09 8.2,13.24 2.49,8.91 9.65,8.76';
+const STAR_115 = '12,0.5 14.7,8.27 22.94,8.45 16.37,13.43 18.76,21.3 12,16.6 5.24,21.3 7.63,13.43 1.06,8.45 9.3,8.27';
+const STAR_130 = '12,-1 15.06,7.79 24.36,7.98 16.94,13.61 19.64,22.52 12,17.2 4.36,22.52 7.06,13.61 -0.36,7.98 8.945,7.79';
 
-// Double-stroke technique: the identical shape drawn twice, a wider black
-// stroke underneath and a narrower white stroke on top, gives every marker a
-// crisp black-outside/white-inside ring that reads clearly against any map
-// tile color and doesn't depend on hue at all - unlike the certified gold/
-// navy fill, which several forms of colorblindness make hard to tell apart.
-// The same ring technique is used on plain circle markers too (a white
-// border plus a black box-shadow ring) so every indicator on the map,
-// TWC-star or not, gets it.
-function starSvg(sizePx, fillColor, label) {
-  const labelSvg = label
-    ? '<text x="12" y="15" text-anchor="middle" font-size="8" font-weight="700" fill="#fff">' + label + '</text>'
-    : '';
-  return '<svg width="' + sizePx + '" height="' + sizePx + '" viewBox="0 0 24 24" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));">'
-    + '<polygon points="' + STAR_POINTS + '" fill="' + fillColor + '" stroke="#000" stroke-width="3"/>'
-    + '<polygon points="' + STAR_POINTS + '" fill="' + fillColor + '" stroke="#fff" stroke-width="1.6"/>'
-    + labelSvg
+// Shared between the static legend swatch (rendered here, once, at build
+// time) and the client-side marker icon (MAP_SCRIPT's own copy below, which
+// has to be a literal string since it runs in the browser, not here - keep
+// the two in sync).
+function starSvg(sizePx, fillColor) {
+  return '<svg width="' + sizePx + '" height="' + sizePx + '" viewBox="-2 -2 28 28">'
+    + '<polygon points="' + STAR_130 + '" fill="#000"/>'
+    + '<polygon points="' + STAR_115 + '" fill="#fff"/>'
+    + '<polygon points="' + STAR_100 + '" fill="' + fillColor + '"/>'
     + '</svg>';
 }
 
@@ -289,6 +288,12 @@ const MAP_HEAD = `
 .map-legend .swatch{display:inline-flex;margin-right:0.35rem;vertical-align:middle;}
 .map-legend .swatch svg{display:block;}
 .map-legend .swatch.regular{display:inline-block;width:12px;height:12px;border-radius:50%;background:#1e3a5f;border:2px solid #fff;box-shadow:0 0 0 1.5px #000;margin-right:0.35rem;vertical-align:middle;}
+/* Leaflet.markercluster's own default cluster icon (colored by count -
+   green/yellow/orange-red - left completely alone below) just gets an
+   outside ring added on top, same black-then-white technique as the star:
+   box-shadow never overlaps the element's own background, so the cluster's
+   count number and its count-based color are both untouched. */
+.marker-cluster div{box-shadow:0 0 0 2px #fff,0 0 0 4px #000;}
 </style>`;
 
 const MAP_SCRIPT = `
@@ -301,29 +306,27 @@ const MAP_SCRIPT = `
     d.textContent = v == null ? '' : String(v);
     return d.innerHTML;
   }
-  // Literal copy of generate-tbm-pages.js's own starSvg()/STAR_POINTS -
+  // Literal copy of generate-tbm-pages.js's own starSvg()/STAR_100/115/130 -
   // has to be duplicated as a string since this whole block runs in the
   // browser, not at build time. Keep the two in sync.
-  const STAR_POINTS = '12,2 14.35,8.76 21.51,8.91 15.8,13.24 17.88,20.09 12,16 6.12,20.09 8.2,13.24 2.49,8.91 9.65,8.76';
-  function starSvg(sizePx, fillColor, label) {
-    const labelSvg = label
-      ? '<text x="12" y="15" text-anchor="middle" font-size="8" font-weight="700" fill="#fff">' + label + '</text>'
-      : '';
-    return '<svg width="' + sizePx + '" height="' + sizePx + '" viewBox="0 0 24 24" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));">'
-      + '<polygon points="' + STAR_POINTS + '" fill="' + fillColor + '" stroke="#000" stroke-width="3"/>'
-      + '<polygon points="' + STAR_POINTS + '" fill="' + fillColor + '" stroke="#fff" stroke-width="1.6"/>'
-      + labelSvg
+  const STAR_100 = '12,2 14.35,8.76 21.51,8.91 15.8,13.24 17.88,20.09 12,16 6.12,20.09 8.2,13.24 2.49,8.91 9.65,8.76';
+  const STAR_115 = '12,0.5 14.7,8.27 22.94,8.45 16.37,13.43 18.76,21.3 12,16.6 5.24,21.3 7.63,13.43 1.06,8.45 9.3,8.27';
+  const STAR_130 = '12,-1 15.06,7.79 24.36,7.98 16.94,13.61 19.64,22.52 12,17.2 4.36,22.52 7.06,13.61 -0.36,7.98 8.945,7.79';
+  function starSvg(sizePx, fillColor) {
+    return '<svg width="' + sizePx + '" height="' + sizePx + '" viewBox="-2 -2 28 28">'
+      + '<polygon points="' + STAR_130 + '" fill="#000"/>'
+      + '<polygon points="' + STAR_115 + '" fill="#fff"/>'
+      + '<polygon points="' + STAR_100 + '" fill="' + fillColor + '"/>'
       + '</svg>';
   }
-  // Same black-outside/white-inside double ring as starSvg, on a plain
-  // circle - every non-TWC marker/cluster gets this too, so visibility
-  // against the map tiles never depends on the certified gold/navy fill
-  // color alone.
-  function circleHtml(sizePx, fillColor, label) {
-    return '<div style="width:' + sizePx + 'px;height:' + sizePx + 'px;border-radius:50%;background:' + fillColor + ';border:2px solid #fff;box-shadow:0 0 0 1.5px #000,0 1px 3px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;">' + (label || '') + '</div>';
+  // Same black-outside/white-inside ring as starSvg, via a plain box-shadow
+  // instead of stacked shapes - box-shadow never overlaps a circle's own
+  // background, so this was already outside-only even before the star fix.
+  function circleHtml(sizePx, fillColor) {
+    return '<div style="width:' + sizePx + 'px;height:' + sizePx + 'px;border-radius:50%;background:' + fillColor + ';box-shadow:0 0 0 2px #fff,0 0 0 4px #000;"></div>';
   }
-  function pinIcon(isStar, sizePx, fillColor, label) {
-    const html = isStar ? starSvg(sizePx, fillColor, label) : circleHtml(sizePx, fillColor, label);
+  function pinIcon(isStar, sizePx, fillColor) {
+    const html = isStar ? starSvg(sizePx, fillColor) : circleHtml(sizePx, fillColor);
     return L.divIcon({ className: '', html: html, iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2] });
   }
   fetch('/events.json').then((r) => r.json()).then((events) => {
@@ -342,38 +345,19 @@ const MAP_SCRIPT = `
       maxZoom: 18,
     }).addTo(map);
 
-    const cluster = L.markerClusterGroup({
-      showCoverageOnHover: false,
-      maxClusterRadius: 70,
-      // A cluster is a star whenever at least one real TWC event is inside
-      // it, so zooming in from a wide star cluster naturally reveals: a mix
-      // of star/circle sub-clusters once TWC and non-TWC pins split apart
-      // into different clusters, then eventually the individual pins
-      // themselves, where only the actual TWC markers stay stars. Cluster
-      // fill is always navy (a cluster can hold both certified and non-
-      // certified events at once, so there's no single certified/non color
-      // to give it) - the count label plus this same navy fill is exactly
-      // what Leaflet.markercluster's own default cluster icons already look
-      // like, just reshaped to a star when it applies.
-      iconCreateFunction: function (c) {
-        const hasTwc = c.getAllChildMarkers().some(function (m) { return m.twcSource; });
-        const count = c.getChildCount();
-        const size = count < 10 ? 34 : count < 100 ? 40 : 48;
-        return pinIcon(hasTwc, size, '#1e3a5f', String(count));
-      },
-    });
+    // Cluster icons are Leaflet.markercluster's own default (colored by how
+    // many pins are inside - green for a few, yellow, then orange/red for a
+    // lot) left completely untouched; only a CSS ring on top (see MAP_HEAD)
+    // adds contrast. No custom iconCreateFunction here on purpose.
+    const cluster = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 70 });
     events.forEach((e) => {
-      // Real TWC events (hosted by an actual Co-Op-listed business, not a
-      // crawler-scraped guess) get a star instead of a plain dot, so they
-      // stand out from crawler-sourced pins at a glance - independent of
-      // the certified gold/navy color, which only marks the "TWC Certified"
-      // checkbox subset.
+      // Only "TWC Certified" gets a star - everything else (a plain TWC
+      // listing or a crawler-sourced one) is a circle. There's no third,
+      // in-between visual category.
       const color = e.certified ? '#c5a572' : '#1e3a5f';
-      const isTwc = e.source === 'twc';
-      const size = isTwc ? 26 : 18;
-      const icon = pinIcon(isTwc, size, color);
+      const size = e.certified ? 26 : 18;
+      const icon = pinIcon(e.certified, size, color);
       const marker = L.marker([e.lat, e.lng], { icon: icon });
-      marker.twcSource = isTwc;
       const certifiedBadge = e.certified ? '<img src="${TWC_SITE_URL}/TWCSeal.png" style="width:26px;height:26px;float:right;">' : '';
       const directoryLink = e.directoryUrl ? '<a href="' + e.directoryUrl + '" target="_blank" rel="noopener" style="display:block;margin-top:0.4rem;font-weight:700;color:#1e3a5f;font-size:0.85rem;">See full profile on TWC &rarr;</a>' : '';
       marker.bindPopup(
@@ -404,7 +388,7 @@ const MAP_SCRIPT = `
 function mapSection() {
   return `
 <div id="map"></div>
-<div class="map-legend"><span><span class="swatch">${starSvg(16, '#c5a572')}</span>TWC Certified</span><span><span class="swatch">${starSvg(16, '#1e3a5f')}</span>Other TWC-listed trivia night</span><span><span class="swatch regular"></span>Other listed trivia night</span><span style="color:#888;">Clusters of pins are stars if any TWC event is inside</span></div>`;
+<div class="map-legend"><span><span class="swatch">${starSvg(16, '#c5a572')}</span>TWC Certified</span><span><span class="swatch regular"></span>Everything else</span><span style="color:#888;">Numbered clusters are colored by how many pins are inside</span></div>`;
 }
 
 // ---- Page renderers -----------------------------------------------------
@@ -590,11 +574,9 @@ async function main() {
     fetchInPersonEvents(sheets, SPREADSHEET_ID),
     fetchBusinessProfilesByUserId(sheets, SPREADSHEET_ID),
   ]);
-  // Tagged 'twc' vs 'crawler' so the map can make real TWC events (TWC's own
-  // hosts, submitted through TWC) visually stand out from crawler-sourced
-  // listings - independent of (and in addition to) the existing certified
-  // gold/navy color split, which only covers the "TWC Certified" checkbox
-  // subset of TWC events, not TWC-sourced-at-all.
+  // Tagged 'twc' vs 'crawler' (carried into events.json, see writeEventsJson
+  // below) purely as a data provenance marker - the map itself only ever
+  // distinguishes on e.certified, not on where a listing came from.
   const twcEvents = attachDirectoryLinks(rawEvents, profilesByUserId).map((e) => ({ ...e, source: 'twc' }));
 
   // Crawler-sourced events (see trivia-events-shared's fetchTbmCrawlerEvents
