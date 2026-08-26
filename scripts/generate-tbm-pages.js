@@ -135,7 +135,7 @@ ${extraHead}
 *{box-sizing:border-box;}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8f9fa;color:#1e3a5f;margin:0;display:flex;flex-direction:column;min-height:100vh;}
 a{color:inherit;}
-.container{max-width:900px;margin:0 auto;padding:0 1.5rem;flex:1;width:100%;}
+.container{max-width:1200px;margin:0 auto;padding:0 1.5rem;flex:1;width:100%;}
 header.site-header{background:#1e3a5f;color:white;padding:0.85rem 0;}
 header.site-header .container{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;}
 .logo{font-size:1.4rem;font-weight:800;text-decoration:none;color:white;letter-spacing:-0.02em;}
@@ -153,8 +153,15 @@ p.lede{color:#555;font-size:1.05rem;}
 .country-group{margin-bottom:1.75rem;}
 .country-group h2{border-bottom:2px solid #c5a572;padding-bottom:0.35rem;margin-bottom:0.75rem;}
 .count{color:#888;font-size:0.85rem;font-weight:400;}
-ul.link-grid{list-style:none;padding:0;margin:0;columns:2;gap:1rem;}
-ul.link-grid li{background:white;border-radius:10px;padding:0.8rem 1.1rem;margin-bottom:0.6rem;box-shadow:0 2px 8px rgba(30,58,95,0.07);break-inside:avoid;}
+/* Mobile-first: 1 column by default (most visitors are on a phone), 2
+   from tablet width, 3 once there's genuinely room for it on a real
+   desktop - a fixed count at each step, not an open-ended auto-fill, so
+   it settles at 3 rather than continuing to add columns on an ultrawide
+   monitor (.container's own 1200px cap does the same job further up). */
+ul.link-grid{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr;gap:0.75rem;}
+@media (min-width:640px){ul.link-grid{grid-template-columns:repeat(2,1fr);}}
+@media (min-width:900px){ul.link-grid{grid-template-columns:repeat(3,1fr);gap:1rem;}}
+ul.link-grid li{background:white;border-radius:10px;padding:0.8rem 1.1rem;margin:0;box-shadow:0 2px 8px rgba(30,58,95,0.07);}
 ul.link-grid li a{font-weight:700;text-decoration:none;color:#1e3a5f;}
 ul.link-grid li a:hover{text-decoration:underline;}
 .day-heading{font-size:1.15rem;color:#1e3a5f;margin:1.75rem 0 0.75rem;padding-bottom:0.35rem;border-bottom:2px solid #c5a572;}
@@ -284,7 +291,12 @@ const MAP_HEAD = `
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" crossorigin="anonymous" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" integrity="sha384-wgw+aLYNQ7dlhK47ZPK7FRACiq7ROZwgFNg0m04avm4CaXS+Z9Y7nMu8yNjBKYC+" crossorigin="anonymous" />
 <style>
-#map{height:480px;border-radius:12px;box-shadow:0 2px 10px rgba(30,58,95,0.1);margin-bottom:0.75rem;}
+/* Taller now that .container has room for it (900px -> 1200px) - kept
+   shorter on phones on purpose (most visitors here are on one) so the map
+   doesn't push the actual event listings below it too far down the page. */
+#map{height:400px;border-radius:12px;box-shadow:0 2px 10px rgba(30,58,95,0.1);margin-bottom:0.75rem;}
+@media (min-width:640px){#map{height:520px;}}
+@media (min-width:900px){#map{height:600px;}}
 .map-legend{display:flex;gap:1.25rem;align-items:center;font-size:0.85rem;color:#555;margin-bottom:2rem;flex-wrap:wrap;}
 .map-legend .swatch{display:inline-flex;margin-right:0.35rem;vertical-align:middle;}
 .map-legend .swatch svg{display:block;}
