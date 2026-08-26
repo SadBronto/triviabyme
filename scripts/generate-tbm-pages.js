@@ -293,12 +293,36 @@ const MAP_HEAD = `
    green/yellow/orange-red - left completely alone below) gets the same
    softened outside ring every other pin gets - box-shadow never overlaps
    the element's own background, so the count number and count-based color
-   are untouched. position:relative is added (Leaflet's own CSS doesn't set
-   it) purely so the certified corner badge - itself a div, and absolutely
-   positioned - anchors to this container instead of some other positioned
-   ancestor up the page. */
-.marker-cluster{position:relative;}
+   are untouched.
+
+   REAL BUG, found live (2026-08-26): position:relative used to be set
+   directly on .marker-cluster itself, to give the absolutely-positioned
+   certified corner badge something to anchor to. .marker-cluster is the
+   SAME element Leaflet's own core CSS marks position:absolute on (via
+   .leaflet-marker-icon) to precisely place every cluster on the map -
+   both are single-class selectors of equal specificity, and this stylesheet
+   loads after Leaflet's, so this rule was silently winning and overwriting
+   absolute with relative on every cluster icon. With position:relative,
+   the transform Leaflet still applies for the correct coordinate became an
+   offset from wherever normal DOM document-flow put the element instead of
+   from a fixed, absolute origin - which put clusters at wildly wrong,
+   unpredictable positions (confirmed live: US clusters rendering stacked
+   vertically off the coast of South America) while leaving individual pins
+   (which never carry the .marker-cluster class) completely unaffected -
+   exactly the "TWC pins are fine, clustered pins are wrong" pattern
+   reported, since the vast majority of multi-pin clusters are crawler-
+   sourced simply by sheer data volume, not because of anything tied to
+   being certified.
+
+   Fixed by giving the badge its own dedicated wrapper (.cluster-wrap,
+   below) to anchor to, so .marker-cluster's own position is never
+   touched. Verified the fix directly: same real ~3500-event dataset,
+   before vs after - before, clusters landed near the equator/Atlantic
+   regardless of real location; after, every US cluster sits in its own
+   correct region (Pacific NW/California/Midwest/Texas/Southeast), matching
+   the coordinates already confirmed correct in the underlying data. */
 .marker-cluster div{box-shadow:0 0 0 1.5px rgba(255,255,255,0.75),0 0 0 3px rgba(0,0,0,0.25);}
+.marker-cluster .cluster-wrap{position:relative;width:40px!important;height:40px!important;margin:0!important;background:none!important;box-shadow:none!important;}
 /* The corner badge is a div too, which would otherwise inherit
    .marker-cluster div's own 30px size / margin / count-color background
    rules above (that selector matches ANY div inside, not just Leaflet's
@@ -401,10 +425,16 @@ const MAP_SCRIPT = `
         const count = c.getChildCount();
         const bucket = clusterBucket(count);
         const hasCertified = c.getAllChildMarkers().some(function (m) { return m.certified; });
-        const html = '<div><span>' + count + '</span></div>'
+        // Wrapped in .cluster-wrap (position:relative, see MAP_HEAD) rather
+        // than putting position:relative on .marker-cluster itself - that
+        // element is the one Leaflet's own CSS needs to keep as
+        // position:absolute to place the cluster correctly at all (real
+        // bug this fixes, see MAP_HEAD's own comment on .marker-cluster).
+        const html = '<div class="cluster-wrap"><div><span>' + count + '</span></div>'
           + (hasCertified
             ? '<div class="cert-badge" style="position:absolute;top:-4px;right:-4px;border-radius:50%;display:flex;align-items:center;justify-content:center;">' + starGlyph(12) + '</div>'
-            : '');
+            : '')
+          + '</div>';
         return L.divIcon({
           html: html,
           className: 'marker-cluster marker-cluster-' + bucket,
