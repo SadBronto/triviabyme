@@ -1,8 +1,18 @@
 [build]
   command = "npm install && node scripts/generate-tbm-pages.js"
   publish = "public"
+  functions = "netlify/functions"
 
-# No [functions] block on purpose - TBM has no live backend of any kind.
-# No login, no submission form, no write access to anything. Every page is
-# static HTML regenerated at build time from the same Google Sheet TWC
-# already owns. Adding/editing an event only ever happens on TWC.
+# TBM otherwise still has no live backend of any kind - no login, no
+# submission form, no write access to anything, every page is static HTML
+# regenerated at build time from the same Google Sheet TWC already owns.
+# This one function is the sole exception: without it, neither a new TWC
+# event nor a corrected crawler-data paste into the Sheet's TBM tab ever
+# showed up on the live site, since a static site only changes on a new
+# build, and nothing was triggering one except a manual code push. Daily
+# (not TWC's own weekly cadence) since TBM's crawler data changes more
+# often during active work on it than TWC's own member-submitted events
+# do - ask to loosen this back to weekly (or tighten further) if daily
+# build-minute usage becomes a real cost concern.
+[functions."trigger-tbm-rebuild"]
+  schedule = "0 8 * * *"
