@@ -270,11 +270,15 @@ const STAR_130 = '12,-1 15.06,7.79 24.36,7.98 16.94,13.61 19.64,22.52 12,17.2 4.
 // time) and the client-side marker icon (MAP_SCRIPT's own copy below, which
 // has to be a literal string since it runs in the browser, not here - keep
 // the two in sync).
-function starSvg(sizePx, fillColor) {
+function starSvg(sizePx, fillColor, label) {
+  const labelSvg = label
+    ? '<text x="12" y="15.5" text-anchor="middle" font-size="9" font-weight="700" font-family="sans-serif" fill="#1e3a5f">' + label + '</text>'
+    : '';
   return '<svg width="' + sizePx + '" height="' + sizePx + '" viewBox="-2 -2 28 28">'
     + '<polygon points="' + STAR_130 + '" fill="#000"/>'
     + '<polygon points="' + STAR_115 + '" fill="#fff"/>'
     + '<polygon points="' + STAR_100 + '" fill="' + fillColor + '"/>'
+    + labelSvg
     + '</svg>';
 }
 
@@ -312,11 +316,15 @@ const MAP_SCRIPT = `
   const STAR_100 = '12,2 14.35,8.76 21.51,8.91 15.8,13.24 17.88,20.09 12,16 6.12,20.09 8.2,13.24 2.49,8.91 9.65,8.76';
   const STAR_115 = '12,0.5 14.7,8.27 22.94,8.45 16.37,13.43 18.76,21.3 12,16.6 5.24,21.3 7.63,13.43 1.06,8.45 9.3,8.27';
   const STAR_130 = '12,-1 15.06,7.79 24.36,7.98 16.94,13.61 19.64,22.52 12,17.2 4.36,22.52 7.06,13.61 -0.36,7.98 8.945,7.79';
-  function starSvg(sizePx, fillColor) {
+  function starSvg(sizePx, fillColor, label) {
+    const labelSvg = label
+      ? '<text x="12" y="15.5" text-anchor="middle" font-size="9" font-weight="700" font-family="sans-serif" fill="#1e3a5f">' + label + '</text>'
+      : '';
     return '<svg width="' + sizePx + '" height="' + sizePx + '" viewBox="-2 -2 28 28">'
       + '<polygon points="' + STAR_130 + '" fill="#000"/>'
       + '<polygon points="' + STAR_115 + '" fill="#fff"/>'
       + '<polygon points="' + STAR_100 + '" fill="' + fillColor + '"/>'
+      + labelSvg
       + '</svg>';
   }
   // Same black-outside/white-inside ring as starSvg, via a plain box-shadow
@@ -325,8 +333,8 @@ const MAP_SCRIPT = `
   function circleHtml(sizePx, fillColor) {
     return '<div style="width:' + sizePx + 'px;height:' + sizePx + 'px;border-radius:50%;background:' + fillColor + ';box-shadow:0 0 0 2px #fff,0 0 0 4px #000;"></div>';
   }
-  function pinIcon(isStar, sizePx, fillColor) {
-    const html = isStar ? starSvg(sizePx, fillColor) : circleHtml(sizePx, fillColor);
+  function pinIcon(isStar, sizePx, fillColor, label) {
+    const html = isStar ? starSvg(sizePx, fillColor, label) : circleHtml(sizePx, fillColor);
     return L.divIcon({ className: '', html: html, iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2] });
   }
   fetch('/events.json').then((r) => r.json()).then((events) => {
@@ -334,22 +342,60 @@ const MAP_SCRIPT = `
       worldCopyJump: true,
       maxBounds: [[-90, -180], [90, 180]],
       maxBoundsViscosity: 1.0,
-      minZoom: 2,
+      // minZoom 1 (not 2) so the whole world actually fits inside the map's
+      // fixed pixel width at once - at zoom 2 the world is 1024px wide,
+      // wider than this page's content column, so it was never actually
+      // possible to zoom out and see everything at once even though
+      // nothing else was stopping you from trying.
+      minZoom: 1,
     }).setView([39.8283, -98.5795], 4);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
       noWrap: true,
       bounds: [[-85, -180], [85, 180]],
-      minZoom: 2,
+      minZoom: 1,
       maxZoom: 18,
     }).addTo(map);
 
-    // Cluster icons are Leaflet.markercluster's own default (colored by how
-    // many pins are inside - green for a few, yellow, then orange/red for a
-    // lot) left completely untouched; only a CSS ring on top (see MAP_HEAD)
-    // adds contrast. No custom iconCreateFunction here on purpose.
-    const cluster = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 70 });
+    const CLUSTER_COLORS = { small: '#6ecc39', medium: '#f0c20c', large: '#f18017' };
+    function clusterBucket(count) {
+      if (count < 10) return 'small';
+      if (count < 100) return 'medium';
+      return 'large';
+    }
+    const cluster = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      maxClusterRadius: 70,
+      // A cluster becomes a (larger) star the moment at least one TWC
+      // Certified event is inside it - zooming in and having it split
+      // apart naturally reverts any sub-cluster/individual pin without a
+      // certified event back to a plain circle, until only the actual
+      // certified pin(s) are left starred. Still colored by count the same
+      // green/yellow/orange-red scheme as an uncertified cluster (the
+      // exact colors Leaflet.markercluster's own default CSS uses, see
+      // CLUSTER_COLORS) - a certified cluster reads as "everything you
+      // already know about this cluster, plus a star," not a different
+      // color language you have to learn separately. Non-certified
+      // clusters are untouched: same HTML/classes Leaflet's own
+      // _defaultIconCreateFunction produces, so the MAP_HEAD ring CSS
+      // still applies and the look is otherwise pixel-identical to no
+      // override at all.
+      iconCreateFunction: function (c) {
+        const count = c.getChildCount();
+        const bucket = clusterBucket(count);
+        const hasCertified = c.getAllChildMarkers().some(function (m) { return m.certified; });
+        if (!hasCertified) {
+          return L.divIcon({
+            html: '<div><span>' + count + '</span></div>',
+            className: 'marker-cluster marker-cluster-' + bucket,
+            iconSize: [40, 40],
+          });
+        }
+        const size = bucket === 'small' ? 44 : bucket === 'medium' ? 54 : 66;
+        return pinIcon(true, size, CLUSTER_COLORS[bucket], String(count));
+      },
+    });
     events.forEach((e) => {
       // Only "TWC Certified" gets a star - everything else (a plain TWC
       // listing or a crawler-sourced one) is a circle. There's no third,
@@ -358,6 +404,7 @@ const MAP_SCRIPT = `
       const size = e.certified ? 26 : 18;
       const icon = pinIcon(e.certified, size, color);
       const marker = L.marker([e.lat, e.lng], { icon: icon });
+      marker.certified = e.certified;
       const certifiedBadge = e.certified ? '<img src="${TWC_SITE_URL}/TWCSeal.png" style="width:26px;height:26px;float:right;">' : '';
       const directoryLink = e.directoryUrl ? '<a href="' + e.directoryUrl + '" target="_blank" rel="noopener" style="display:block;margin-top:0.4rem;font-weight:700;color:#1e3a5f;font-size:0.85rem;">See full profile on TWC &rarr;</a>' : '';
       marker.bindPopup(
@@ -388,7 +435,7 @@ const MAP_SCRIPT = `
 function mapSection() {
   return `
 <div id="map"></div>
-<div class="map-legend"><span><span class="swatch">${starSvg(16, '#c5a572')}</span>TWC Certified</span><span><span class="swatch regular"></span>Everything else</span><span style="color:#888;">Numbered clusters are colored by how many pins are inside</span></div>`;
+<div class="map-legend"><span><span class="swatch">${starSvg(16, '#c5a572')}</span>TWC Certified</span><span><span class="swatch regular"></span>Everything else</span><span style="color:#888;">Numbered clusters are colored by how many pins are inside - a star means a Certified event is in there too</span></div>`;
 }
 
 // ---- Page renderers -----------------------------------------------------
