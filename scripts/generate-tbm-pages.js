@@ -253,39 +253,30 @@ function hostCtaCompact() {
 // instead of breaking anything (it's still fully browsable via the country/
 // region/city pages below).
 
-// Three copies of the same 5-point star polygon, each scaled up around its
-// own center (12,12) - largest/black at the back, mid/white in the middle,
-// true-size/actual-color on top - so the border shows up ONLY outside the
-// star's real silhouette. A centered SVG stroke (the previous approach)
-// draws half its width inward, eating into the colored area and cramming
-// anything drawn inside it; stacking differently-sized copies of the same
-// shape never touches the inside at all, however thick the ring gets.
-// viewBox is padded out to -2..26 (28x28) to leave room for the largest
-// (1.3x) copy without clipping it.
+// A 5-point star polygon on a 24x24 viewBox (outer radius 10, inner
+// radius 4, centered at 12,12).
 const STAR_100 = '12,2 14.35,8.76 21.51,8.91 15.8,13.24 17.88,20.09 12,16 6.12,20.09 8.2,13.24 2.49,8.91 9.65,8.76';
-const STAR_115 = '12,0.5 14.7,8.27 22.94,8.45 16.37,13.43 18.76,21.3 12,16.6 5.24,21.3 7.63,13.43 1.06,8.45 9.3,8.27';
-const STAR_130 = '12,-1 15.06,7.79 24.36,7.98 16.94,13.61 19.64,22.52 12,17.2 4.36,22.52 7.06,13.61 -0.36,7.98 8.945,7.79';
 
+// Every pin (and every cluster) is a circle - matching the reference image
+// the user sent directly: a plain navy circle, with a gold star glyph
+// centered inside for a TWC Certified event, nothing extra for anything
+// else. Replaces an earlier approach that made the whole pin star-shaped
+// for certified events - that made the (necessarily muted) gold read as
+// LESS prominent than a plain navy circle, not more, since a star fills
+// less of its own bounding box and its outline no longer matched every
+// other pin's. Putting the star as a small glyph ON a normal circular pin
+// sidesteps that: the outer silhouette and its contrast ring are identical
+// for every pin regardless of certified status, so nothing about shape or
+// size is fighting for attention - only the glyph inside says "certified."
 // Shared between the static legend swatch (rendered here, once, at build
-// time) and the client-side marker icon (MAP_SCRIPT's own copy below, which
-// has to be a literal string since it runs in the browser, not here - keep
-// the two in sync).
-function starSvg(sizePx, fillColor, label) {
-  const labelSvg = label
-    ? '<text x="12" y="15.5" text-anchor="middle" font-size="9" font-weight="700" font-family="sans-serif" fill="#1e3a5f">' + label + '</text>'
-    : '';
-  // A soft color-matched glow on top of the hard black/white ring - gold
-  // (#c5a572) is a muted, low-saturation color close to the map tiles' own
-  // beige tones, so even with the same ring treatment as navy it read as
-  // less prominent, not more, defeating the entire point of marking
-  // certified events specially. The glow doesn't replace the ring (still
-  // outside-only, still legible) - it adds ambient presence around it.
-  return '<svg width="' + sizePx + '" height="' + sizePx + '" viewBox="-2 -2 28 28" style="filter:drop-shadow(0 0 5px ' + fillColor + ') drop-shadow(0 0 5px ' + fillColor + ');">'
-    + '<polygon points="' + STAR_130 + '" fill="#000"/>'
-    + '<polygon points="' + STAR_115 + '" fill="#fff"/>'
-    + '<polygon points="' + STAR_100 + '" fill="' + fillColor + '"/>'
-    + labelSvg
-    + '</svg>';
+// time) and the client-side marker icon (MAP_SCRIPT's own copy below,
+// which has to be a literal string since it runs in the browser, not here
+// - keep the two in sync).
+function starGlyph(sizePx) {
+  return '<svg width="' + sizePx + '" height="' + sizePx + '" viewBox="0 0 24 24" style="display:block;"><polygon points="' + STAR_100 + '" fill="#c5a572"/></svg>';
+}
+function pinHtml(sizePx, fillColor, inner) {
+  return '<div style="width:' + sizePx + 'px;height:' + sizePx + 'px;border-radius:50%;background:' + fillColor + ';box-shadow:0 0 0 1.5px rgba(255,255,255,0.75),0 0 0 3px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;">' + (inner || '') + '</div>';
 }
 
 const MAP_HEAD = `
@@ -299,12 +290,21 @@ const MAP_HEAD = `
 .map-legend .swatch svg{display:block;}
 .map-legend .swatch.regular{display:inline-block;width:12px;height:12px;border-radius:50%;background:#1e3a5f;border:1.5px solid rgba(255,255,255,0.75);box-shadow:0 0 0 3px rgba(0,0,0,0.25);margin-right:0.35rem;vertical-align:middle;}
 /* Leaflet.markercluster's own default cluster icon (colored by count -
-   green/yellow/orange-red - left completely alone below) gets a softened
-   outside ring for contrast - box-shadow never overlaps the element's own
-   background, so the count number and count-based color are untouched.
-   Kept deliberately lighter than the certified star's glow (see starSvg)
-   so a plain cluster never visually outweighs a certified one. */
+   green/yellow/orange-red - left completely alone below) gets the same
+   softened outside ring every other pin gets - box-shadow never overlaps
+   the element's own background, so the count number and count-based color
+   are untouched. position:relative is added (Leaflet's own CSS doesn't set
+   it) purely so the certified corner badge - itself a div, and absolutely
+   positioned - anchors to this container instead of some other positioned
+   ancestor up the page. */
+.marker-cluster{position:relative;}
 .marker-cluster div{box-shadow:0 0 0 1.5px rgba(255,255,255,0.75),0 0 0 3px rgba(0,0,0,0.25);}
+/* The corner badge is a div too, which would otherwise inherit
+   .marker-cluster div's own 30px size / margin / count-color background
+   rules above (that selector matches ANY div inside, not just Leaflet's
+   own count div) - reset every one of those back to what the badge's own
+   inline style actually wants. */
+.marker-cluster .cert-badge{width:18px!important;height:18px!important;margin:0!important;background:#1e3a5f!important;box-shadow:0 0 0 1.5px #fff!important;}
 </style>`;
 
 const MAP_SCRIPT = `
@@ -317,36 +317,18 @@ const MAP_SCRIPT = `
     d.textContent = v == null ? '' : String(v);
     return d.innerHTML;
   }
-  // Literal copy of generate-tbm-pages.js's own starSvg()/STAR_100/115/130 -
+  // Literal copy of generate-tbm-pages.js's own starGlyph()/pinHtml() -
   // has to be duplicated as a string since this whole block runs in the
   // browser, not at build time. Keep the two in sync.
   const STAR_100 = '12,2 14.35,8.76 21.51,8.91 15.8,13.24 17.88,20.09 12,16 6.12,20.09 8.2,13.24 2.49,8.91 9.65,8.76';
-  const STAR_115 = '12,0.5 14.7,8.27 22.94,8.45 16.37,13.43 18.76,21.3 12,16.6 5.24,21.3 7.63,13.43 1.06,8.45 9.3,8.27';
-  const STAR_130 = '12,-1 15.06,7.79 24.36,7.98 16.94,13.61 19.64,22.52 12,17.2 4.36,22.52 7.06,13.61 -0.36,7.98 8.945,7.79';
-  function starSvg(sizePx, fillColor, label) {
-    const labelSvg = label
-      ? '<text x="12" y="15.5" text-anchor="middle" font-size="9" font-weight="700" font-family="sans-serif" fill="#1e3a5f">' + label + '</text>'
-      : '';
-    return '<svg width="' + sizePx + '" height="' + sizePx + '" viewBox="-2 -2 28 28" style="filter:drop-shadow(0 0 5px ' + fillColor + ') drop-shadow(0 0 5px ' + fillColor + ');">'
-      + '<polygon points="' + STAR_130 + '" fill="#000"/>'
-      + '<polygon points="' + STAR_115 + '" fill="#fff"/>'
-      + '<polygon points="' + STAR_100 + '" fill="' + fillColor + '"/>'
-      + labelSvg
-      + '</svg>';
+  function starGlyph(sizePx) {
+    return '<svg width="' + sizePx + '" height="' + sizePx + '" viewBox="0 0 24 24" style="display:block;"><polygon points="' + STAR_100 + '" fill="#c5a572"/></svg>';
   }
-  // Same outside-only ring as starSvg, via a plain box-shadow instead of
-  // stacked shapes (box-shadow never overlaps a circle's own background).
-  // Softer than the star's ring on purpose - solid black/white read as
-  // more visually dominant than the star's glow, which defeats the point
-  // of certified events being the ones that stand out. Semi-transparent
-  // rings still give every plain pin a contrast edge against the map
-  // tiles without competing with the certified stars for attention.
-  function circleHtml(sizePx, fillColor) {
-    return '<div style="width:' + sizePx + 'px;height:' + sizePx + 'px;border-radius:50%;background:' + fillColor + ';box-shadow:0 0 0 1.5px rgba(255,255,255,0.75),0 0 0 3px rgba(0,0,0,0.25);"></div>';
+  function pinHtml(sizePx, fillColor, inner) {
+    return '<div style="width:' + sizePx + 'px;height:' + sizePx + 'px;border-radius:50%;background:' + fillColor + ';box-shadow:0 0 0 1.5px rgba(255,255,255,0.75),0 0 0 3px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;">' + (inner || '') + '</div>';
   }
-  function pinIcon(isStar, sizePx, fillColor, label) {
-    const html = isStar ? starSvg(sizePx, fillColor, label) : circleHtml(sizePx, fillColor);
-    return L.divIcon({ className: '', html: html, iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2] });
+  function pinIcon(sizePx, fillColor, inner) {
+    return L.divIcon({ className: '', html: pinHtml(sizePx, fillColor, inner), iconSize: [sizePx, sizePx], iconAnchor: [sizePx / 2, sizePx / 2] });
   }
   fetch('/events.json').then((r) => r.json()).then((events) => {
     const map = L.map('map', {
@@ -378,47 +360,36 @@ const MAP_SCRIPT = `
     const cluster = L.markerClusterGroup({
       showCoverageOnHover: false,
       maxClusterRadius: 70,
-      // A cluster becomes a (larger) star the moment at least one TWC
-      // Certified event is inside it - zooming in and having it split
-      // apart naturally reverts any sub-cluster/individual pin without a
-      // certified event back to a plain circle, until only the actual
-      // certified pin(s) are left starred. Still colored by count the same
-      // green/yellow/orange-red scheme as an uncertified cluster (the
-      // exact colors Leaflet.markercluster's own default CSS uses, see
-      // CLUSTER_COLORS) - a certified cluster reads as "everything you
-      // already know about this cluster, plus a star," not a different
-      // color language you have to learn separately. Non-certified
-      // clusters are untouched: same HTML/classes Leaflet's own
-      // _defaultIconCreateFunction produces, so the MAP_HEAD ring CSS
-      // still applies and the look is otherwise pixel-identical to no
-      // override at all.
+      // A cluster containing at least one TWC Certified event gets a small
+      // navy-and-gold star badge in the corner, on top of its normal
+      // count-colored circle (the exact green/yellow/orange-red scheme
+      // Leaflet.markercluster's own default CSS uses, see CLUSTER_COLORS -
+      // untouched, still what a non-certified cluster looks like too) - the
+      // count stays front and center and readable either way. Zooming in
+      // and having a cluster split apart naturally drops the badge off any
+      // resulting sub-cluster/individual pin that turns out to have no
+      // certified event in it.
       iconCreateFunction: function (c) {
         const count = c.getChildCount();
         const bucket = clusterBucket(count);
         const hasCertified = c.getAllChildMarkers().some(function (m) { return m.certified; });
-        if (!hasCertified) {
-          return L.divIcon({
-            html: '<div><span>' + count + '</span></div>',
-            className: 'marker-cluster marker-cluster-' + bucket,
-            iconSize: [40, 40],
-          });
-        }
-        const size = bucket === 'small' ? 44 : bucket === 'medium' ? 54 : 66;
-        return pinIcon(true, size, CLUSTER_COLORS[bucket], String(count));
+        const html = '<div><span>' + count + '</span></div>'
+          + (hasCertified
+            ? '<div class="cert-badge" style="position:absolute;top:-4px;right:-4px;border-radius:50%;display:flex;align-items:center;justify-content:center;">' + starGlyph(12) + '</div>'
+            : '');
+        return L.divIcon({
+          html: html,
+          className: 'marker-cluster marker-cluster-' + bucket,
+          iconSize: [40, 40],
+        });
       },
     });
     events.forEach((e) => {
-      // Only "TWC Certified" gets a star - everything else (a plain TWC
-      // listing or a crawler-sourced one) is a circle. There's no third,
-      // in-between visual category.
-      const color = e.certified ? '#c5a572' : '#1e3a5f';
-      // A star fills much less of its own bounding box than a circle does,
-      // so a star and circle of the same nominal size still read as the
-      // star being smaller - sized up further (not just given a glow) to
-      // actually compensate for that, on top of already being the bigger
-      // of the two on purpose.
-      const size = e.certified ? 34 : 18;
-      const icon = pinIcon(e.certified, size, color);
+      // Every pin is the same navy circle - a TWC Certified event just
+      // gets a gold star glyph centered inside it, nothing else changes.
+      const size = e.certified ? 24 : 18;
+      const inner = e.certified ? starGlyph(Math.round(size * 0.62)) : null;
+      const icon = pinIcon(size, '#1e3a5f', inner);
       const marker = L.marker([e.lat, e.lng], { icon: icon });
       marker.certified = e.certified;
       const certifiedBadge = e.certified ? '<img src="${TWC_SITE_URL}/TWCSeal.png" style="width:26px;height:26px;float:right;">' : '';
@@ -451,7 +422,7 @@ const MAP_SCRIPT = `
 function mapSection() {
   return `
 <div id="map"></div>
-<div class="map-legend"><span><span class="swatch">${starSvg(16, '#c5a572')}</span>TWC Certified</span><span><span class="swatch regular"></span>Everything else</span><span style="color:#888;">Numbered clusters are colored by how many pins are inside - a star means a Certified event is in there too</span></div>`;
+<div class="map-legend"><span><span class="swatch">${pinHtml(16, '#1e3a5f', starGlyph(10))}</span>TWC Certified</span><span><span class="swatch regular"></span>Everything else</span><span style="color:#888;">Numbered clusters are colored by how many pins are inside</span></div>`;
 }
 
 // ---- Page renderers -----------------------------------------------------
